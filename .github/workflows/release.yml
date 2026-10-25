@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release, e.g. v1.0.0'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # build.sh needs tags for `git describe`
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      # Never publish a binary built from a red tree.
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test
+        run: go test -count=1 ./...
+
+      - name: resolve version
+        id: v
+        run: |
+          tag="${{ inputs.tag }}"
+          [ -n "$tag" ] || tag="${GITHUB_REF_NAME}"
+          echo "tag=$tag" >>"$GITHUB_OUTPUT"
+
+      - name: build
+        env:
+          VERSION: ${{ steps.v.outputs.tag }}
+        run: bash build.sh
+
+      - name: smoke test the linux binary
+        run: |
+          set -euo pipefail
+          bin=dist/strip-comments-linux-amd64
+          chmod +x "$bin"
+          got=$("$bin" -version)
+          echo "$got"
+          [ "$got" = "strip-comments ${{ steps.v.outputs.tag }}" ] || {
+            echo "version mismatch: want 'strip-comments ${{ steps.v.outputs.tag }}'"
+            exit 1
+          }
+          mkdir -p /tmp/smoke
+          printf '//go:build linux\n\n// doc\npackage m // c\n' >/tmp/smoke/m.go
+          printf '# c\nx = "#"  # trailing\n' >/tmp/smoke/a.py
+          "$bin" -w /tmp/smoke
+          # //go:build must survive; every other comment must be gone.
+          diff <(cat /tmp/smoke/m.go) <(printf '//go:build linux\n\npackage m\n')
+          diff <(cat /tmp/smoke/a.py) <(printf 'x = "#"\n')
+          echo "smoke test passed"
+
+      - name: publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.v.outputs.tag }}" \
+            dist/strip-comments-* dist/SHA256SUMS \
+            --title "strip-comments ${{ steps.v.outputs.tag }}" \
+            --generate-notes \
+            --notes "Static binaries, no runtime dependencies. Verify with \`sha256sum -c SHA256SUMS\`.
+
+          | file | platform |
+          | --- | --- |
+          | \`strip-comments-linux-amd64\` | Linux x86-64 |
+          | \`strip-comments-linux-arm64\` | Linux ARM64 |
+          | \`strip-comments-windows-amd64.exe\` | Windows x86-64 |
+          | \`strip-comments-windows-arm64.exe\` | Windows ARM64 |
+
+          Default is a dry run; pass \`-w\` to modify files."

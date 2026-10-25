@@ -1,0 +1,14 @@
+# Build output: release binaries are attached to GitHub releases, not committed.
+/dist/
+
+# Internal development notes from the agents that built this.
+/.reports/
+
+# Backups written by `strip-comments -backup`.
+*.bak
+
+# Local binaries from `go build` without -o.
+/strip-comments
+/strip-comments.exe
+/Remove_Temp
+/Remove_Temp.exe
