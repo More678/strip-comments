@@ -3,7 +3,7 @@ package scan
 import (
 	"testing"
 
-	"github.com/More678/Remove-All-Commet/internal/lang"
+	"github.com/More678/strip-comments/internal/lang"
 )
 
 // TestKeepLicenseRun covers the header run that KeepLicense protects: it

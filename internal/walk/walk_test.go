@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/More678/Remove-All-Commet/internal/lang"
+	"github.com/More678/strip-comments/internal/lang"
 )
 
 // write creates path (with its parents) under dir and returns nothing.

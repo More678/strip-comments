@@ -6,7 +6,7 @@
 // Shift-JIS content passes through byte-for-byte without decoding.
 package scan
 
-import "github.com/More678/Remove-All-Commet/internal/lang"
+import "github.com/More678/strip-comments/internal/lang"
 
 // Options tweaks what counts as removable.
 type Options struct {

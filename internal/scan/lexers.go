@@ -6,7 +6,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/More678/Remove-All-Commet/internal/lang"
+	"github.com/More678/strip-comments/internal/lang"
 )
 
 // charAt matches a strict char literal at i: `'` + one UTF-8 codepoint (not

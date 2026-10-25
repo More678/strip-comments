@@ -23,7 +23,7 @@ runtime dependencies.
 Or build from source with Go 1.22+:
 
 ```sh
-go install github.com/More678/Remove-All-Commet@latest
+go install github.com/More678/strip-comments@latest
 ```
 
 ## Usage

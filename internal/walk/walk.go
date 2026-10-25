@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/More678/Remove-All-Commet/internal/lang"
+	"github.com/More678/strip-comments/internal/lang"
 )
 
 // SkipDirs are never descended into. A directory named on the command line is

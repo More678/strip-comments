@@ -15,10 +15,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/More678/Remove-All-Commet/internal/lang"
-	"github.com/More678/Remove-All-Commet/internal/scan"
-	"github.com/More678/Remove-All-Commet/internal/textio"
-	"github.com/More678/Remove-All-Commet/internal/walk"
+	"github.com/More678/strip-comments/internal/lang"
+	"github.com/More678/strip-comments/internal/scan"
+	"github.com/More678/strip-comments/internal/textio"
+	"github.com/More678/strip-comments/internal/walk"
 )
 
 // version is overridden at build time:

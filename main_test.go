@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/More678/Remove-All-Commet/internal/lang"
-	"github.com/More678/Remove-All-Commet/internal/scan"
-	"github.com/More678/Remove-All-Commet/internal/walk"
+	"github.com/More678/strip-comments/internal/lang"
+	"github.com/More678/strip-comments/internal/scan"
+	"github.com/More678/strip-comments/internal/walk"
 )
 
 // fixture writes body to a fresh .go file and returns it as a walk.File.

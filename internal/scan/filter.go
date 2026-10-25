@@ -3,7 +3,7 @@ package scan
 import (
 	"bytes"
 
-	"github.com/More678/Remove-All-Commet/internal/lang"
+	"github.com/More678/strip-comments/internal/lang"
 )
 
 // filter removes the spans that have to survive from the candidate list and

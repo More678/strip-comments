@@ -3,7 +3,7 @@ package scan
 import (
 	"testing"
 
-	"github.com/More678/Remove-All-Commet/internal/lang"
+	"github.com/More678/strip-comments/internal/lang"
 )
 
 // cnt wraps a literal so a table case can distinguish "expect 0" from

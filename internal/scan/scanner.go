@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/More678/Remove-All-Commet/internal/lang"
+	"github.com/More678/strip-comments/internal/lang"
 )
 
 // cmtKind tags an entry in the merged comment rule list.
