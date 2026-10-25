@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"sync"
 
@@ -23,7 +24,21 @@ import (
 
 // version is overridden at build time:
 // go build -ldflags "-X main.version=v1.2.3"
-var version = "dev"
+var version = ""
+
+// buildVersion reports the release version. A binary from build.sh has it
+// stamped in; one from `go install pkg@v1.2.3` has to read it back out of the
+// module metadata, which is the only place the tag survives there.
+func buildVersion() string {
+	if version != "" {
+		return version
+	}
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" &&
+		info.Main.Version != "(devel)" {
+		return info.Main.Version
+	}
+	return "dev"
+}
 
 // Exit codes.
 const (
@@ -81,7 +96,7 @@ func run(args []string) int {
 
 	switch {
 	case *showVer:
-		fmt.Printf("strip-comments %s\n", version)
+		fmt.Printf("strip-comments %s\n", buildVersion())
 		return exitOK
 	case *list:
 		printLanguages()
