@@ -16,6 +16,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/More678/strip-comments/internal/glossary"
 	"github.com/More678/strip-comments/internal/lang"
 	"github.com/More678/strip-comments/internal/scan"
 	"github.com/More678/strip-comments/internal/textio"
@@ -56,6 +57,12 @@ type config struct {
 	quiet   bool
 	lang    *lang.Language
 	workers int
+	// showTerms lists each term replacement under its file. It is the main
+	// point of a dry run with -replace, so it is on whenever -replace is.
+	showTerms bool
+	// keepComments mirrors scan.Options.KeepComments, so the report can leave
+	// out a comment count that is always zero.
+	keepComments bool
 }
 
 func main() { os.Exit(run(os.Args[1:])) }
@@ -89,6 +96,13 @@ func run(args []string) int {
 		list      = fs.Bool("list", false, "list the supported languages and exit")
 		showVer   = fs.Bool("version", false, "print the version and exit")
 		maxSize   = fs.Int64("max-size", walk.DefaultMaxSize, "skip files larger than this many bytes")
+
+		replace   = fs.Bool("replace", false, "replace terminology from the glossary in code and comments")
+		termsFile = fs.String("terms", "", "term table file (TSV or .json) replacing the built-in one")
+		termsAdd  = fs.String("terms-add", "", "term table file taking precedence over the built-in one")
+		termsCmt  = fs.Bool("terms-in-comments", false, "replace terms only inside comments")
+		keepCmt   = fs.Bool("keep-comments", false, "replace terms without removing any comment")
+		listTerms = fs.Bool("list-terms", false, "print the term table in effect and exit")
 	)
 	if err := fs.Parse(args); err != nil {
 		return exitUsage
@@ -100,6 +114,14 @@ func run(args []string) int {
 		return exitOK
 	case *list:
 		printLanguages()
+		return exitOK
+	case *listTerms:
+		rules, err := termRules(*termsFile, *termsAdd)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return exitUsage
+		}
+		printTerms(rules)
 		return exitOK
 	}
 
@@ -124,6 +146,26 @@ func run(args []string) int {
 	}
 	opt := scan.Options{KeepDoc: *keepDoc, KeepBlank: *keepBlank,
 		KeepLicense: *keepLic, Force: *force}
+
+	// A term file without -replace is a mistake worth naming: the run would
+	// silently ignore the table the user went to the trouble of writing.
+	if !*replace && (*termsFile != "" || *termsAdd != "" || *termsCmt || *keepCmt) {
+		fmt.Fprintln(os.Stderr,
+			"term flags need -replace; nothing would be replaced without it")
+		return exitUsage
+	}
+	if *replace {
+		rules, err := termRules(*termsFile, *termsAdd)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return exitUsage
+		}
+		opt.Glossary = glossary.NewTable(rules)
+		opt.TermsInComments = *termsCmt
+		opt.KeepComments = *keepCmt
+		cfg.showTerms = true
+		cfg.keepComments = *keepCmt
+	}
 
 	roots := fs.Args()
 	if len(roots) == 0 {
@@ -153,12 +195,82 @@ func run(args []string) int {
 	return report(results, skips, len(errs), cfg)
 }
 
+// termRules assembles the rule set: -terms replaces the built-in table,
+// -terms-add takes precedence over it.
+//
+// Rules are matched longest-first and, at equal length, in slice order, so a
+// user rule has to sit *before* the built-in one to win. That is why an added
+// file is prepended even though the flag is called -terms-add.
+func termRules(replaceFile, addFile string) ([]glossary.Rule, error) {
+	base := glossary.Default
+	if replaceFile != "" {
+		loaded, err := glossary.Load(replaceFile)
+		if err != nil {
+			return nil, err
+		}
+		base = loaded
+	}
+	if addFile == "" {
+		return base, nil
+	}
+	added, err := glossary.Load(addFile)
+	if err != nil {
+		return nil, err
+	}
+	return append(added, base...), nil
+}
+
+// printTerms lists the rules in match order.
+func printTerms(rules []glossary.Rule) {
+	tb := glossary.NewTable(rules)
+	for _, r := range tb.Rules() {
+		flags := ""
+		switch {
+		case r.Word && r.CI:
+			flags = "\tword,ci"
+		case r.Word:
+			flags = "\tword"
+		case r.CI:
+			flags = "\tci"
+		}
+		fmt.Printf("%s\t%s%s\n", r.From, r.To, flags)
+	}
+}
+
+// counts renders the per-file tally. With -keep-comments the comment count is
+// always zero, so printing "-0 comments" would just be noise.
+func counts(r result, cfg config) string {
+	var parts []string
+	if !cfg.keepComments {
+		parts = append(parts, fmt.Sprintf("-%d comments", r.comments),
+			fmt.Sprintf("-%d lines", r.lines))
+	}
+	if cfg.showTerms {
+		parts = append(parts, fmt.Sprintf("%d terms", len(r.terms)))
+	}
+	return strings.Join(parts, ", ")
+}
+
+// printHits lists each replacement under its file, newest-first by line.
+// A dry run with -replace is the main way to review a term table, so the
+// before and after text are both shown.
+func printHits(hits []glossary.Hit) {
+	for _, h := range hits {
+		where := "code"
+		if h.InComment {
+			where = "comment"
+		}
+		fmt.Printf("      line %d  %s -> %s  (%s)\n", h.Line, h.From, h.To, where)
+	}
+}
+
 // result is what happened to one file.
 type result struct {
 	file     walk.File
 	changed  bool
 	comments int
 	lines    int
+	terms    []glossary.Hit
 	skip     string
 	err      error
 }
@@ -211,10 +323,12 @@ func stripOne(f walk.File, cfg config, opt scan.Options) result {
 		res.skip = sr.Reason
 		return res
 	}
-	if sr.Comments == 0 {
-		// Nothing was stripped, so leave the bytes alone. Re-encoding would
-		// still rewrite a file whose line endings are mixed, and normalising
-		// line endings is not this tool's job.
+	res.terms = sr.Terms
+	if sr.Comments == 0 && len(sr.Terms) == 0 {
+		// Nothing was stripped or replaced, so leave the bytes alone.
+		// Re-encoding would still rewrite a file whose line endings are mixed,
+		// and normalising line endings is not this tool's job. Terms count as
+		// a change: with -keep-comments they are the only change there is.
 		return res
 	}
 	out := textio.Encode(sr.Output, format)
@@ -242,7 +356,7 @@ func stripOne(f walk.File, cfg config, opt scan.Options) result {
 // report prints one line per changed file, then the summary, and returns the
 // exit code.
 func report(results []result, skips []walk.Skip, walkErrs int, cfg config) int {
-	var changed, comments, lines, errCount int
+	var changed, comments, lines, terms, errCount int
 	skipped := len(skips)
 
 	for _, r := range results {
@@ -259,9 +373,13 @@ func report(results []result, skips []walk.Skip, walkErrs int, cfg config) int {
 			changed++
 			comments += r.comments
 			lines += r.lines
+			terms += len(r.terms)
 			if !cfg.quiet {
-				fmt.Printf("  %s  %s  -%d comments, -%d lines\n",
-					displayPath(r.file.Path), r.file.Lang.Name, r.comments, r.lines)
+				fmt.Printf("  %s  %s  %s\n", displayPath(r.file.Path),
+					r.file.Lang.Name, counts(r, cfg))
+				if cfg.showTerms {
+					printHits(r.terms)
+				}
 			}
 		}
 	}
@@ -269,8 +387,14 @@ func report(results []result, skips []walk.Skip, walkErrs int, cfg config) int {
 		for _, s := range skips {
 			fmt.Printf("SKIP %s: %s\n", displayPath(s.Path), s.Reason)
 		}
-		fmt.Printf("\n%d files scanned, %d changed, %d comments removed, %d lines removed, %d skipped, %d errors\n",
-			len(results), changed, comments, lines, skipped, errCount+walkErrs)
+		fmt.Printf("\n%d files scanned, %d changed, ", len(results), changed)
+		if !cfg.keepComments {
+			fmt.Printf("%d comments removed, %d lines removed, ", comments, lines)
+		}
+		if cfg.showTerms {
+			fmt.Printf("%d terms replaced, ", terms)
+		}
+		fmt.Printf("%d skipped, %d errors\n", skipped, errCount+walkErrs)
 		if !cfg.write && changed > 0 {
 			fmt.Println("dry run: re-run with -w to apply")
 		}
