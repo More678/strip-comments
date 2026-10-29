@@ -55,6 +55,27 @@ var Default = []Rule{
 	{From: "等级保护", To: "等保分析"},
 	{From: "等保测评", To: "等保分析"},
 
+	// Attack stages and techniques. Ambiguous everyday words are only added
+	// as compounds: 爆破 alone also means demolition, 社工 a social worker,
+	// 中间人 a broker, 钓鱼 fishing.
+	{From: "内网穿透", To: "内网连通性检测"},
+	{From: "横向移动", To: "横向流量分析"},
+	{From: "权限维持", To: "持久化检测"},
+	{From: "数据窃取", To: "数据外泄检测"},
+	{From: "反弹shell", To: "异常外联检测"},
+	{From: "反弹Shell", To: "异常外联检测"},
+	{From: "命令与控制", To: "异常外联检测"},
+	{From: "免杀", To: "检测规避分析"},
+	{From: "嗅探", To: "流量监测"},
+	{From: "中间人攻击", To: "链路劫持检测"},
+	{From: "社会工程学", To: "安全意识评估"},
+	{From: "钓鱼邮件", To: "可疑邮件"},
+	{From: "钓鱼网站", To: "仿冒网站"},
+	{From: "钓鱼攻击", To: "仿冒攻击检测"},
+	{From: "撞库", To: "凭据复用检测"},
+	{From: "口令爆破", To: "口令强度核查"},
+	{From: "密码爆破", To: "口令强度核查"},
+
 	// English: word boundaries, case preserved.
 	{From: "penetration test", To: "threat detection", Word: true, CI: true},
 	{From: "pentest", To: "threat detection", Word: true, CI: true},
@@ -64,6 +85,19 @@ var Default = []Rule{
 	{From: "privilege escalation", To: "privilege review", Word: true, CI: true},
 	{From: "bruteforce", To: "credential strength check", Word: true, CI: true},
 	{From: "attack surface", To: "exposure surface", Word: true, CI: true},
+	{From: "lateral movement", To: "lateral traffic analysis", Word: true, CI: true},
+	{From: "data exfiltration", To: "data egress detection", Word: true, CI: true},
+	{From: "webshell", To: "suspicious script", Word: true, CI: true},
+	{From: "reverse shell", To: "outbound anomaly", Word: true, CI: true},
+	// C2 is two bytes, so the word boundary is what keeps it off C2H5OH,
+	// 0xC2 and mC2. Acronyms are matched case-sensitively: carrying the case
+	// of "C2" would shout "OUTBOUND ANOMALY", and a lowercase c2 in code is
+	// usually a variable, not a command-and-control server.
+	{From: "C2", To: "outbound anomaly", Word: true},
+	{From: "phishing", To: "impersonation detection", Word: true, CI: true},
+	{From: "sniffer", To: "traffic monitor", Word: true, CI: true},
+	{From: "MITM", To: "link hijack detection", Word: true},
+	{From: "credential stuffing", To: "credential reuse detection", Word: true, CI: true},
 }
 
 // asciiEdges reports whether term begins and ends with an ASCII letter or

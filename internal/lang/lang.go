@@ -74,9 +74,15 @@ type Language struct {
 	YAMLBlock     bool     // YAML `|` / `>` block scalars are opaque
 	MakeRecipe    bool     // Makefile: tab-indented lines are left untouched
 	PHPRegions    bool     // only scan inside `<?php ... ?>` / `<?= ... ?>`
-	EndMarker     string   // a line equal to this ends the code (`__END__`)
-	Keep          []string // RE2 patterns matched against the full comment text
-	Risky         bool     // heuristic support only; opt-in via --lang/--ext
+	// TextContent marks a language whose body is text rather than tokens, so
+	// a comment does not separate what surrounds it: `a<!-- b -->c` has to
+	// become `ac`, because a space there would change what the page renders.
+	// In a programming language the opposite holds: `int/**/x` must not
+	// collapse into `intx`.
+	TextContent bool
+	EndMarker   string   // a line equal to this ends the code (`__END__`)
+	Keep        []string // RE2 patterns matched against the full comment text
+	Risky       bool     // heuristic support only; opt-in via --lang/--ext
 
 	keepRE *regexp.Regexp
 }

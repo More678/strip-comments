@@ -20,6 +20,8 @@ import (
 	"github.com/More678/strip-comments/internal/lang"
 	"github.com/More678/strip-comments/internal/scan"
 	"github.com/More678/strip-comments/internal/textio"
+	"github.com/More678/strip-comments/internal/udiff"
+	"github.com/More678/strip-comments/internal/verify"
 	"github.com/More678/strip-comments/internal/walk"
 )
 
@@ -63,6 +65,16 @@ type config struct {
 	// keepComments mirrors scan.Options.KeepComments, so the report can leave
 	// out a comment count that is always zero.
 	keepComments bool
+	// allowSecrets mirrors walk.Options.AllowSecrets for the -stdout path,
+	// which does not go through walk.
+	allowSecrets bool
+	// noVerify skips the structural check that runs before a file is
+	// reported as changed.
+	noVerify bool
+	// diff prints a unified diff per changed file instead of a one-line tally.
+	diff bool
+	// check makes a run that would change anything exit non-zero, for CI.
+	check bool
 }
 
 func main() { os.Exit(run(os.Args[1:])) }
@@ -103,6 +115,10 @@ func run(args []string) int {
 		termsCmt  = fs.Bool("terms-in-comments", false, "replace terms only inside comments")
 		keepCmt   = fs.Bool("keep-comments", false, "replace terms without removing any comment")
 		listTerms = fs.Bool("list-terms", false, "print the term table in effect and exit")
+		allowSec  = fs.Bool("allow-secrets", false, "process files that look like credentials (.env, *.pem, secrets.yml)")
+		noVerify  = fs.Bool("no-verify", false, "skip the structural check that runs before writing")
+		showDiff  = fs.Bool("diff", false, "print a unified diff of every change, write nothing")
+		checkOnly = fs.Bool("check", false, "exit non-zero if any file would change, write nothing")
 	)
 	if err := fs.Parse(args); err != nil {
 		return exitUsage
@@ -133,6 +149,17 @@ func run(args []string) int {
 		risky:   *risky,
 		quiet:   *quiet,
 		workers: *jobs,
+
+		allowSecrets: *allowSec,
+		noVerify:     *noVerify,
+		diff:         *showDiff,
+		check:        *checkOnly,
+	}
+	// -check and -diff only report, so asking to write as well is a
+	// contradiction worth naming rather than silently resolving.
+	if (*checkOnly || *showDiff) && (*write || *writeLong) {
+		fmt.Fprintln(os.Stderr, "-check and -diff never write; drop -w")
+		return exitUsage
 	}
 	if cfg.workers < 1 {
 		cfg.workers = 1
@@ -187,6 +214,8 @@ func run(args []string) int {
 		Risky:    cfg.risky,
 		MaxSize:  *maxSize,
 		SelfPath: self,
+
+		AllowSecrets: *allowSec,
 	})
 	for _, err := range errs {
 		fmt.Fprintln(os.Stderr, err)
@@ -273,6 +302,9 @@ type result struct {
 	terms    []glossary.Hit
 	skip     string
 	err      error
+	// diff holds the unified diff, filled in only under -diff so an ordinary
+	// run does not keep two copies of every file in memory.
+	diff string
 }
 
 // process strips every file through a worker pool. Results stay in walk
@@ -331,6 +363,14 @@ func stripOne(f walk.File, cfg config, opt scan.Options) result {
 		// a change: with -keep-comments they are the only change there is.
 		return res
 	}
+	// Verify before anything is reported as changed, so a dry run shows the
+	// same SKIP the write would have produced.
+	if !cfg.noVerify {
+		if err := verify.Check(text, sr.Output, f.Lang); err != nil {
+			res.skip = "verification failed: " + err.Error()
+			return res
+		}
+	}
 	out := textio.Encode(sr.Output, format)
 	if bytes.Equal(out, raw) {
 		return res
@@ -338,6 +378,11 @@ func stripOne(f walk.File, cfg config, opt scan.Options) result {
 	res.changed = true
 	res.comments = sr.Comments
 	res.lines = sr.RemovedLines
+	if cfg.diff {
+		// Diff the decoded text, not the raw bytes: a CRLF file would
+		// otherwise show a stray \r at the end of every line.
+		res.diff = udiff.Unified(displayPath(f.Path), text, sr.Output)
+	}
 	if !cfg.write {
 		return res
 	}
@@ -381,6 +426,15 @@ func report(results []result, skips []walk.Skip, walkErrs int, cfg config) int {
 					printHits(r.terms)
 				}
 			}
+			// The diff is the point of -diff, so -q does not hide it.
+			if cfg.diff {
+				fmt.Print(r.diff)
+			}
+			// -check names the files on stderr, where CI logs look first,
+			// and regardless of -q.
+			if cfg.check {
+				fmt.Fprintf(os.Stderr, "would change: %s\n", displayPath(r.file.Path))
+			}
 		}
 	}
 	if !cfg.quiet {
@@ -395,11 +449,16 @@ func report(results []result, skips []walk.Skip, walkErrs int, cfg config) int {
 			fmt.Printf("%d terms replaced, ", terms)
 		}
 		fmt.Printf("%d skipped, %d errors\n", skipped, errCount+walkErrs)
-		if !cfg.write && changed > 0 {
+		if !cfg.write && !cfg.check && changed > 0 {
 			fmt.Println("dry run: re-run with -w to apply")
 		}
 	}
 	if errCount+walkErrs > 0 {
+		return exitError
+	}
+	// -check fails the build when anything would change, the same contract
+	// as `gofmt -l` piped into a non-empty test.
+	if cfg.check && changed > 0 {
 		return exitError
 	}
 	return exitOK
@@ -407,6 +466,15 @@ func report(results []result, skips []walk.Skip, walkErrs int, cfg config) int {
 
 // runStdout strips one file and writes the result to stdout.
 func runStdout(path string, cfg config, opt scan.Options) int {
+	// -stdout does not go through walk, so the credential guard has to be
+	// repeated here. Printing a private key is not a write, but it still
+	// puts the contents somewhere the user did not ask for.
+	if !cfg.allowSecrets {
+		if why := walk.SecretReason(path); why != "" {
+			fmt.Fprintf(os.Stderr, "%s: %s (use -allow-secrets)\n", path, why)
+			return exitError
+		}
+	}
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -429,6 +497,12 @@ func runStdout(path string, cfg config, opt scan.Options) int {
 	if sr.Unsafe && !cfg.force {
 		fmt.Fprintf(os.Stderr, "%s: %s (use -force)\n", path, sr.Reason)
 		return exitError
+	}
+	if !cfg.noVerify {
+		if err := verify.Check(text, sr.Output, l); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: verification failed: %v\n", path, err)
+			return exitError
+		}
 	}
 	if _, err := os.Stdout.Write(textio.Encode(sr.Output, format)); err != nil {
 		fmt.Fprintln(os.Stderr, err)

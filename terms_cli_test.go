@@ -163,3 +163,110 @@ func TestReplaceIdempotent(t *testing.T) {
 		}
 	}
 }
+
+// TestStdoutRefusesSecrets covers the one path that does not go through walk.
+// Printing a key file is not a write, but it still puts the contents
+// somewhere the user did not ask for, so it needs the same guard.
+func TestStdoutRefusesSecrets(t *testing.T) {
+	dir := srcDir(t, map[string]string{
+		"secrets.yml": "db:\n  pass: hunter2 # c\n",
+		"app.yml":     "x: 1 # c\n",
+	})
+
+	code, out := runCLI(t, "-stdout", filepath.Join(dir, "secrets.yml"))
+	if code == exitOK {
+		t.Errorf("exit = %d, want non-zero for a credential file", code)
+	}
+	if strings.Contains(out, "hunter2") {
+		t.Errorf("the credential reached stdout:\n%s", out)
+	}
+
+	// An ordinary file still works, and -allow-secrets lifts the guard.
+	if code, out := runCLI(t, "-stdout", filepath.Join(dir, "app.yml")); code != exitOK {
+		t.Errorf("ordinary file: exit = %d, out %q", code, out)
+	}
+	code, out = runCLI(t, "-stdout", "-allow-secrets", filepath.Join(dir, "secrets.yml"))
+	if code != exitOK {
+		t.Errorf("-allow-secrets: exit = %d", code)
+	}
+	if !strings.Contains(out, "hunter2") {
+		t.Errorf("-allow-secrets did not print the file:\n%s", out)
+	}
+}
+
+// TestVerifyBlocksBrokenWrite drives the check end to end. A term table whose
+// replacement drops a stray bracket into code would leave a file that no
+// longer parses, so the write must be refused, the file left byte-identical,
+// and the reason shown. -no-verify lets it through, the escape hatch for a
+// user who knows better.
+func TestVerifyBlocksBrokenWrite(t *testing.T) {
+	const body = "package x\n\nfunc F() int { return HOLE }\n"
+	dir := srcDir(t, map[string]string{"a.go": body})
+	table := filepath.Join(t.TempDir(), "t.tsv")
+	if err := os.WriteFile(table, []byte("HOLE\t1)\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "a.go")
+
+	code, out := runCLI(t, "-replace", "-keep-comments", "-terms", table, "-w", dir)
+	if code != exitOK {
+		t.Fatalf("exit = %d:\n%s", code, out)
+	}
+	if !strings.Contains(out, "verification failed") {
+		t.Errorf("report does not name the failed check:\n%s", out)
+	}
+	if got, _ := os.ReadFile(path); string(got) != body {
+		t.Errorf("broken rewrite was written:\n%s", got)
+	}
+
+	runCLI(t, "-replace", "-keep-comments", "-terms", table, "-no-verify", "-w", dir)
+	if got, _ := os.ReadFile(path); string(got) == body {
+		t.Error("-no-verify did not let the write through")
+	}
+}
+
+// TestCheckExitCode is the CI contract: non-zero when anything would change,
+// zero on a clean tree, and the files are never touched either way.
+func TestCheckExitCode(t *testing.T) {
+	const dirty = "package x\n\nvar n = 1 // c\n"
+	dir := srcDir(t, map[string]string{"a.go": dirty})
+
+	if code, _ := runCLI(t, "-check", "-q", dir); code != exitError {
+		t.Errorf("dirty tree: exit = %d, want %d", code, exitError)
+	}
+	if got, _ := os.ReadFile(filepath.Join(dir, "a.go")); string(got) != dirty {
+		t.Errorf("-check wrote the file:\n%s", got)
+	}
+
+	clean := srcDir(t, map[string]string{"a.go": "package x\n\nvar n = 1\n"})
+	if code, _ := runCLI(t, "-check", "-q", clean); code != exitOK {
+		t.Errorf("clean tree: exit = %d, want %d", code, exitOK)
+	}
+}
+
+func TestDiffPrintsAndDoesNotWrite(t *testing.T) {
+	const body = "package x\n\n// note\nvar n = 1\n"
+	dir := srcDir(t, map[string]string{"a.go": body})
+
+	code, out := runCLI(t, "-diff", dir)
+	if code != exitOK {
+		t.Fatalf("exit = %d:\n%s", code, out)
+	}
+	for _, want := range []string{"@@ -", "-// note", " var n = 1"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("diff output lacks %q:\n%s", want, out)
+		}
+	}
+	if got, _ := os.ReadFile(filepath.Join(dir, "a.go")); string(got) != body {
+		t.Errorf("-diff wrote the file:\n%s", got)
+	}
+}
+
+func TestReportOnlyFlagsRejectWrite(t *testing.T) {
+	dir := srcDir(t, map[string]string{"a.go": "package x\n"})
+	for _, flag := range []string{"-check", "-diff"} {
+		if code, _ := runCLI(t, flag, "-w", dir); code != exitUsage {
+			t.Errorf("%s -w: exit = %d, want %d", flag, code, exitUsage)
+		}
+	}
+}

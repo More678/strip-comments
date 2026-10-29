@@ -54,6 +54,41 @@ func TestLoadTSV(t *testing.T) {
 	}
 }
 
+// TestFlagColumnSemantics pins the two halves of the rule. A column naming
+// any positive flag states the flags outright, which is what makes
+// -list-terms output survive being read back in: its `word` column has to
+// mean word-bounded and case-sensitive, not word plus an inferred ci. A
+// column of only negatives subtracts from the inference instead.
+func TestFlagColumnSemantics(t *testing.T) {
+	cases := []struct {
+		col              string
+		wantWord, wantCI bool
+	}{
+		{"word", true, false},
+		{"ci", false, true},
+		{"word,ci", true, true},
+		{"nocase", true, false}, // inference minus ci
+		{"noword", false, true}, // inference minus word
+		{"", true, true},        // empty column: inference stands
+	}
+	for _, tc := range cases {
+		t.Run(tc.col, func(t *testing.T) {
+			body := "pentest\tthreat detection"
+			if tc.col != "" {
+				body += "\t" + tc.col
+			}
+			rules, err := Load(writeTemp(t, "t.tsv", body+"\n"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if rules[0].Word != tc.wantWord || rules[0].CI != tc.wantCI {
+				t.Errorf("col %q gave Word=%v CI=%v, want %v and %v",
+					tc.col, rules[0].Word, rules[0].CI, tc.wantWord, tc.wantCI)
+			}
+		})
+	}
+}
+
 func TestLoadJSON(t *testing.T) {
 	p := writeTemp(t, "terms.json",
 		`[{"from":"渗透","to":"威胁检测"},

@@ -97,7 +97,7 @@ func Strip(src []byte, l *lang.Language, opt Options) Result {
 			Terms: terms}
 	}
 	spans = filter(src, spans, l, opt)
-	out, removed := rebuild(src, spans, opt.KeepBlank)
+	out, removed := rebuild(src, spans, opt.KeepBlank, l.TextContent)
 	return Result{Output: out, Comments: len(spans), RemovedLines: removed,
 		Unsafe: reason != "", Reason: reason, Terms: terms}
 }

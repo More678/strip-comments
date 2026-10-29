@@ -63,6 +63,10 @@ strip-comments -stdout a.go   # print one stripped file
 | `-terms-in-comments` | replace terms only inside comments |
 | `-keep-comments` | replace terms without removing any comment |
 | `-list-terms` | print the term table in effect and exit |
+| `-diff` | print a unified diff of every change, write nothing |
+| `-check` | exit non-zero if any file would change, write nothing (for CI) |
+| `-no-verify` | skip the structural check that runs before writing |
+| `-allow-secrets` | process files that look like credentials |
 
 ## What it keeps on purpose
 
@@ -139,9 +143,25 @@ The built-in table, which `-list-terms` prints in match order:
 | 提权 | 权限核查 | | `privilege escalation` | `privilege review` |
 | 后门 | 异常通道 | | `backdoor` | `anomalous channel` |
 | 木马 | 可疑程序 | | `bruteforce` | `credential strength check` |
-| 暴力破解 | 口令强度核查 | | | |
-| 绕过 | 合规偏差 | | | |
-| 等级保护 / 等保测评 | 等保分析 | | | |
+| 暴力破解 / 口令爆破 | 口令强度核查 | | `credential stuffing` | `credential reuse detection` |
+| 绕过 | 合规偏差 | | `lateral movement` | `lateral traffic analysis` |
+| 等级保护 / 等保测评 | 等保分析 | | `data exfiltration` | `data egress detection` |
+| 内网穿透 | 内网连通性检测 | | `webshell` | `suspicious script` |
+| 横向移动 | 横向流量分析 | | `reverse shell` / `C2` | `outbound anomaly` |
+| 权限维持 | 持久化检测 | | `phishing` | `impersonation detection` |
+| 数据窃取 | 数据外泄检测 | | `sniffer` | `traffic monitor` |
+| 反弹shell / 命令与控制 | 异常外联检测 | | `MITM` | `link hijack detection` |
+| 免杀 | 检测规避分析 | | | |
+| 嗅探 | 流量监测 | | | |
+| 中间人攻击 | 链路劫持检测 | | | |
+| 社会工程学 | 安全意识评估 | | | |
+| 钓鱼邮件 / 钓鱼网站 | 可疑邮件 / 仿冒网站 | | | |
+| 撞库 | 凭据复用检测 | | | |
+
+Ambiguous everyday words are only matched as compounds, since 爆破 also means
+demolition, 社工 a social worker, 中间人 a broker and 钓鱼 fishing. `C2` and
+`MITM` are matched case-sensitively, so `0xC2`, `C2H5OH` and a `c2` variable
+are left alone.
 
 `-terms` replaces the built-in table outright. `-terms-add` keeps it and puts
 your rules first, so your version of a term wins. Longer terms always match
@@ -175,6 +195,38 @@ and left untouched even under `-w`:
 
 ```
 SKIP b.go: after term replacement: unterminated string at line 3
+```
+
+## Guards on writing
+
+Three checks stand between a rewrite and your files.
+
+**Credential files are skipped.** `.env`, `*.pem`, `*.key`, `id_rsa`,
+`secrets.yml`, `credentials.json`, `terraform.tfvars`, anything under `.ssh/`,
+`.aws/`, `.kube/` and the like. The reason is named in the report:
+
+```
+SKIP secrets.yml: credential file (secrets.yml), use -allow-secrets
+```
+
+Neither `-lang` nor naming the file on the command line lifts this; only
+`-allow-secrets` does. `-stdout` is guarded too, since printing a key still
+puts it somewhere you did not ask for.
+
+**Every rewrite is verified before it lands.** The file is compared against
+its original: if the bracket balance outside comments changed, a string or
+comment was left unterminated, or a Go file stopped parsing, the write is
+refused and the file reported as a `SKIP`. Only the difference is judged, so a
+file that was already unbalanced is not blamed on the tool. `-no-verify`
+turns this off.
+
+**Nothing is written without `-w`.** `-diff` shows the exact change, `-check`
+makes CI fail when anything would change, and both refuse to run with `-w`:
+
+```sh
+strip-comments -diff .            # review the change
+strip-comments -check .           # exit 1 if anything would change
+strip-comments -w -backup .       # apply, keeping .bak copies
 ```
 
 ## Deliberately unsupported

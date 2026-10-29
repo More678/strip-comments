@@ -31,6 +31,10 @@ type Options struct {
 	Risky    bool           // include languages flagged Risky
 	MaxSize  int64          // skip larger files; 0 means DefaultMaxSize
 	SelfPath string         // the tool's own binary, never touched
+	// AllowSecrets processes files that look like credentials (see
+	// SecretReason). Off by default, because rewriting a key file in place
+	// is the one change this tool should never make by accident.
+	AllowSecrets bool
 }
 
 // File is one file worth stripping.
@@ -174,6 +178,16 @@ func (w *walker) file(path string, size int64, mode os.FileMode, explicit bool) 
 		w.seen[key] = true
 		w.skips = append(w.skips, Skip{path, "risky language " + l.Name + ", use -risky"})
 		return
+	}
+	// Checked after the language, so files the tool would ignore anyway stay
+	// silent instead of filling the report with SKIPs. Neither -lang nor
+	// naming the file lifts it: only -allow-secrets does.
+	if !w.opt.AllowSecrets {
+		if why := SecretReason(path); why != "" {
+			w.seen[key] = true
+			w.skips = append(w.skips, Skip{path, why + ", use -allow-secrets"})
+			return
+		}
 	}
 	if size > w.opt.MaxSize {
 		w.seen[key] = true

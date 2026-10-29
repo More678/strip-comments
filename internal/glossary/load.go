@@ -80,7 +80,16 @@ func parseTSV(raw []byte, path string) ([]Rule, error) {
 			return nil, fmt.Errorf("%s:%d: empty term", path, line)
 		}
 		rule := inferred(from, strings.TrimSpace(cols[1]))
-		if len(cols) > 2 {
+		if len(cols) > 2 && strings.TrimSpace(cols[2]) != "" {
+			// A column naming any positive flag states the flags outright,
+			// so `word` on its own means word-bounded and case-sensitive;
+			// that is the shape -list-terms prints, and it has to read back
+			// unchanged. A column of only noword/nocase subtracts from the
+			// inference instead, which is what `Exploit<TAB>x<TAB>nocase`
+			// has always meant.
+			if hasPositiveFlag(cols[2]) {
+				rule.Word, rule.CI = false, false
+			}
 			if err := applyFlags(&rule, cols[2]); err != nil {
 				return nil, fmt.Errorf("%s:%d: %w", path, line, err)
 			}
@@ -97,6 +106,17 @@ func parseTSV(raw []byte, path string) ([]Rule, error) {
 func inferred(from, to string) Rule {
 	ascii := asciiEdges(from)
 	return Rule{From: from, To: to, Word: ascii, CI: ascii}
+}
+
+// hasPositiveFlag reports whether a flag column names word or ci.
+func hasPositiveFlag(col string) bool {
+	for _, f := range strings.Split(col, ",") {
+		switch strings.ToLower(strings.TrimSpace(f)) {
+		case "word", "ci":
+			return true
+		}
+	}
+	return false
 }
 
 // applyFlags reads a comma-separated flag column.

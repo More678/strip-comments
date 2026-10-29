@@ -11,7 +11,7 @@ import "bytes"
 // asks for an empty line instead. Lines that keep code lose their trailing
 // blanks. Lines without a removed comment are copied byte for byte, so
 // original blank lines and a missing final newline survive untouched.
-func rebuild(src []byte, spans []Span, keepBlank bool) (out []byte, removedLines int) {
+func rebuild(src []byte, spans []Span, keepBlank, textContent bool) (out []byte, removedLines int) {
 	if len(spans) == 0 {
 		return src, 0
 	}
@@ -44,8 +44,20 @@ func rebuild(src []byte, spans []Span, keepBlank bool) (out []byte, removedLines
 		touched = false
 	}
 
+	// sep is set after an inline comment is dropped. A comment separates
+	// tokens, so `int/**/x` must not become `intx` nor `1 -/**/-1` become
+	// `1 --1`: the next kept byte gets a space if it would glue on.
+	sep := false
+
 	// keepText copies text that stays, breaking it into lines.
 	keepText := func(b []byte) {
+		if sep && !textContent && len(b) > 0 && len(line) > 0 &&
+			glues(line[len(line)-1], b[0]) {
+			line = append(line, ' ')
+		}
+		if len(b) > 0 {
+			sep = false
+		}
 		for {
 			i := bytes.IndexByte(b, '\n')
 			if i < 0 {
@@ -63,12 +75,15 @@ func rebuild(src []byte, spans []Span, keepBlank bool) (out []byte, removedLines
 		if len(b) == 0 {
 			return
 		}
+		sep = true
 		for {
 			touched = true
 			i := bytes.IndexByte(b, '\n')
 			if i < 0 {
 				return
 			}
+			// A kept newline already separates whatever comes next.
+			sep = false
 			flush(true)
 			b = b[i+1:]
 		}
@@ -100,6 +115,28 @@ func rebuild(src []byte, spans []Span, keepBlank bool) (out []byte, removedLines
 }
 
 // lineIsBlank reports whether b holds whitespace only.
+// glues reports whether a and b would read as one token once the comment
+// between them is gone: two identifier bytes (`int` + `x`) or two operator
+// bytes (`-` + `-`, `/` + `/`). Brackets, quotes and separators never merge,
+// so `f(/* x */1)` needs no space.
+func glues(a, b byte) bool {
+	return (isWord(a) && isWord(b)) || (isOp(a) && isOp(b))
+}
+
+func isWord(c byte) bool {
+	return c == '_' || c == '$' || c >= 0x80 ||
+		(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+}
+
+func isOp(c byte) bool {
+	switch c {
+	case '+', '-', '*', '/', '%', '=', '<', '>', '!', '&', '|', '^', '~',
+		'.', ':', '?', '#', '@':
+		return true
+	}
+	return false
+}
+
 func lineIsBlank(b []byte) bool {
 	for _, c := range b {
 		switch c {
