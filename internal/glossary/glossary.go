@@ -76,6 +76,28 @@ var Default = []Rule{
 	{From: "口令爆破", To: "口令强度核查"},
 	{From: "密码爆破", To: "口令强度核查"},
 
+	// Vulnerability classes and recon. Generic phrases are only added as
+	// compounds: 目录遍历 alone is also an ordinary directory walk, 代码执行
+	// an ordinary "code runs", 红队 a sports team.
+	{From: "命令注入", To: "命令执行风险核查"},
+	{From: "远程代码执行", To: "远程执行风险核查"},
+	{From: "目录遍历漏洞", To: "路径访问核查"},
+	{From: "路径穿越", To: "路径访问核查"},
+	{From: "反序列化漏洞", To: "反序列化风险"},
+	{From: "越权访问", To: "权限越界核查"},
+	{From: "未授权访问", To: "访问控制核查"},
+	{From: "弱口令", To: "口令强度核查"},
+	{From: "信息泄露", To: "信息暴露核查"},
+	{From: "提权漏洞", To: "权限风险"},
+	{From: "供应链攻击", To: "供应链风险评估"},
+	{From: "端口扫描", To: "端口开放核查"},
+	{From: "漏洞扫描", To: "风险扫描"},
+	{From: "资产探测", To: "资产梳理"},
+	{From: "零日漏洞", To: "未公开风险"},
+	{From: "漏洞挖掘", To: "风险发现"},
+	{From: "攻防演练", To: "安全演练"},
+	{From: "红队测试", To: "对抗性评估"},
+
 	// English: word boundaries, case preserved.
 	{From: "penetration test", To: "threat detection", Word: true, CI: true},
 	{From: "pentest", To: "threat detection", Word: true, CI: true},
@@ -98,6 +120,26 @@ var Default = []Rule{
 	{From: "sniffer", To: "traffic monitor", Word: true, CI: true},
 	{From: "MITM", To: "link hijack detection", Word: true},
 	{From: "credential stuffing", To: "credential reuse detection", Word: true, CI: true},
+
+	// v1.3.0: vulnerability classes, recon and tooling. Acronyms are
+	// case-sensitive for the same reason as C2; the word boundary keeps RCE
+	// off FORCE and SOURCE. "red team" alone also names a sports side, so
+	// only the activity form is added.
+	{From: "RCE", To: "remote execution risk", Word: true},
+	{From: "SSRF", To: "server request review", Word: true},
+	{From: "LFI", To: "file inclusion review", Word: true},
+	{From: "privilege bypass", To: "access control review", Word: true, CI: true},
+	{From: "port scan", To: "open port review", Word: true, CI: true},
+	{From: "port scanning", To: "open port review", Word: true, CI: true},
+	{From: "port scanner", To: "open port auditor", Word: true, CI: true},
+	{From: "vulnerability scan", To: "risk scan", Word: true, CI: true},
+	{From: "vulnerability scanner", To: "risk scanner", Word: true, CI: true},
+	{From: "zero-day", To: "undisclosed risk", Word: true, CI: true},
+	{From: "0day", To: "undisclosed risk", Word: true, CI: true},
+	{From: "red teaming", To: "adversarial assessment", Word: true, CI: true},
+	{From: "exploit kit", To: "risk validation toolkit", Word: true, CI: true},
+	{From: "rootkit", To: "kernel-level anomaly", Word: true, CI: true},
+	{From: "keylogger", To: "input monitor", Word: true, CI: true},
 }
 
 // asciiEdges reports whether term begins and ends with an ASCII letter or
@@ -112,6 +154,11 @@ func asciiEdges(term string) bool {
 	last, _ := utf8.DecodeLastRuneInString(term)
 	return isASCIIWord(first) && isASCIIWord(last)
 }
+
+// HasASCIIEdges reports whether a term file would infer word,ci for term when
+// its flag column is empty. A writer of term files needs this to know when an
+// explicit noword,nocase is required to keep a rule's flags off.
+func HasASCIIEdges(term string) bool { return asciiEdges(term) }
 
 func isASCIIWord(r rune) bool {
 	return r < utf8.RuneSelf && (unicode.IsLetter(r) || unicode.IsDigit(r))

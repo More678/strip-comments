@@ -60,6 +60,27 @@ func TestNewTermsBoundaries(t *testing.T) {
 		{"口令爆破", "口令强度核查"},
 		// Mixed CJK/ASCII terms match inside Chinese prose.
 		{"检测反弹shell行为", "检测异常外联检测行为"},
+		// v1.3.0 terms: generic phrases stay, compounds are rewritten.
+		{"递归目录遍历", "递归目录遍历"},
+		{"修复目录遍历漏洞", "修复路径访问核查"},
+		{"红队成员", "红队成员"},
+		{"开展红队测试", "开展对抗性评估"},
+		{"存在远程代码执行", "存在远程执行风险核查"},
+		{"提权漏洞修复", "权限风险修复"},
+		// v1.3.0 English. Acronyms: case-sensitive and word-bounded.
+		{"an RCE in the parser", "an remote execution risk in the parser"},
+		{"FORCE SOURCE", "FORCE SOURCE"},
+		{"rce := 1", "rce := 1"},
+		{"blind SSRF", "blind server request review"},
+		{"LFI2 test", "LFI2 test"},
+		// Compounds win over their prefixes.
+		{"run a port scanner", "run a open port auditor"},
+		{"the exploit kit", "the risk validation toolkit"},
+		{"a zero-day bug", "a undisclosed risk bug"},
+		{"10day window", "10day window"},
+		// "red team" alone is not added; only the activity.
+		{"the red team won", "the red team won"},
+		{"Red teaming results", "Adversarial assessment results"},
 	}
 	for _, tc := range cases {
 		got, _ := tb.Apply([]byte(tc.in), Options{

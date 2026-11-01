@@ -117,6 +117,32 @@ func TestListTermsRoundTrip(t *testing.T) {
 	}
 }
 
+// TestListTermsRoundTripFlagless covers the rule the built-in table happens
+// not to contain: an ASCII term with neither flag. An empty flag column is
+// read back with the inferred word,ci, so -list-terms has to print
+// noword,nocase for it, or the table changes on every round trip.
+func TestListTermsRoundTripFlagless(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.tsv")
+	body := "foo\tbar\tnoword,nocase\n渗透\t威胁检测\n"
+	if err := os.WriteFile(src, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, first := runCLI(t, "-list-terms", "-terms", src)
+	if !strings.Contains(first, "foo\tbar\tnoword,nocase") {
+		t.Errorf("flagless ASCII rule printed without its flags:\n%s", first)
+	}
+
+	again := filepath.Join(dir, "again.tsv")
+	if err := os.WriteFile(again, []byte(first), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, second := runCLI(t, "-list-terms", "-terms", again); second != first {
+		t.Errorf("round trip changed the table:\n got:\n%s\n want:\n%s", second, first)
+	}
+}
+
 // TestReplaceIdempotent: a second run must find nothing. If a replacement
 // could itself be matched by another rule, the file would keep drifting on
 // every run, which is the worst failure mode for a tool invoked from CI.

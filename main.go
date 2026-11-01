@@ -261,6 +261,10 @@ func printTerms(rules []glossary.Rule) {
 			flags = "\tword"
 		case r.CI:
 			flags = "\tci"
+		case glossary.HasASCIIEdges(r.From):
+			// An empty column would be read back with the inferred word,ci,
+			// so a rule that wants neither has to say so.
+			flags = "\tnoword,nocase"
 		}
 		fmt.Printf("%s\t%s%s\n", r.From, r.To, flags)
 	}

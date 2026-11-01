@@ -158,10 +158,38 @@ The built-in table, which `-list-terms` prints in match order:
 | 钓鱼邮件 / 钓鱼网站 | 可疑邮件 / 仿冒网站 | | | |
 | 撞库 | 凭据复用检测 | | | |
 
+Vulnerability classes, recon and tooling:
+
+| from | to | | from | to |
+| --- | --- | --- | --- | --- |
+| 命令注入 | 命令执行风险核查 | | `RCE` | `remote execution risk` |
+| 远程代码执行 | 远程执行风险核查 | | `SSRF` | `server request review` |
+| 目录遍历漏洞 / 路径穿越 | 路径访问核查 | | `LFI` | `file inclusion review` |
+| 反序列化漏洞 | 反序列化风险 | | `privilege bypass` | `access control review` |
+| 越权访问 | 权限越界核查 | | `port scan` / `port scanning` | `open port review` |
+| 未授权访问 | 访问控制核查 | | `port scanner` | `open port auditor` |
+| 弱口令 | 口令强度核查 | | `vulnerability scan` | `risk scan` |
+| 信息泄露 | 信息暴露核查 | | `vulnerability scanner` | `risk scanner` |
+| 提权漏洞 | 权限风险 | | `zero-day` / `0day` | `undisclosed risk` |
+| 供应链攻击 | 供应链风险评估 | | `red teaming` | `adversarial assessment` |
+| 端口扫描 | 端口开放核查 | | `exploit kit` | `risk validation toolkit` |
+| 漏洞扫描 | 风险扫描 | | `rootkit` | `kernel-level anomaly` |
+| 资产探测 | 资产梳理 | | `keylogger` | `input monitor` |
+| 零日漏洞 | 未公开风险 | | | |
+| 漏洞挖掘 | 风险发现 | | | |
+| 攻防演练 | 安全演练 | | | |
+| 红队测试 | 对抗性评估 | | | |
+
 Ambiguous everyday words are only matched as compounds, since 爆破 also means
-demolition, 社工 a social worker, 中间人 a broker and 钓鱼 fishing. `C2` and
-`MITM` are matched case-sensitively, so `0xC2`, `C2H5OH` and a `c2` variable
-are left alone.
+demolition, 社工 a social worker, 中间人 a broker, 钓鱼 fishing, 目录遍历 an
+ordinary directory walk and 红队 a sports side. Acronyms (`C2`, `MITM`, `RCE`,
+`SSRF`, `LFI`) are matched case-sensitively and as whole words, so `0xC2`,
+`C2H5OH`, `FORCE`, `SOURCE` and a `c2` or `rce` variable are left alone.
+
+Standard vulnerability names such as SQL注入, XSS and CSRF are deliberately not
+in the table: they are the precise term, and replacing them would make the code
+harder to read. Defensive vocabulary (蜜罐, 取证, 应急响应, 零信任, 蓝队) is
+left alone too, since it is already the wording the table rewrites towards.
 
 `-terms` replaces the built-in table outright. `-terms-add` keeps it and puts
 your rules first, so your version of a term wins. Longer terms always match
