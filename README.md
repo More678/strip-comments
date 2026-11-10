@@ -8,6 +8,39 @@ strings, raw strings, heredocs and regex literals are left alone:
 `"http://x"`, Go backticks, C++ `R"x( // )x"`, Rust `r#"//"#`, Java text
 blocks, shell heredocs and `/\/\//g` all survive.
 
+## Additional language support
+
+These languages use the existing lexer; no extra runtime or compiler is needed:
+
+| `-lang` | Automatically recognised files | Comments / protected literals |
+| --- | --- | --- |
+| `gdscript` | `.gd` | `#`, `##` documentation; quoted and triple-quoted strings |
+| `gdshader` | `.gdshader`, `.gdshaderinc` | `//`, `/* */`, `/** */` documentation; quoted include paths |
+| `wgsl` | `.wgsl` | `//` and nested `/* */` |
+| `meson` | `meson.build`, `meson.options`, `meson_options.txt` | `#`; single-quoted strings and raw triple-single-quoted strings |
+| `starlark` | `.bzl`, `.bazel`, `BUILD`, `WORKSPACE` | `#`; single-, double- and triple-quoted strings |
+
+`BUILD.bazel`, `WORKSPACE.bazel` and `MODULE.bazel` are recognised by extension.
+Filename matching follows the existing case-insensitive lookup. `-keep-doc`
+preserves GDScript `##` and Godot Shader `/** */` comments. Triple-quoted text
+remains a string, not a removable block comment. An unterminated multiline
+literal or block comment is skipped unless `-force` is passed.
+
+```sh
+strip-comments -diff -ext .gd,.gdshader,.gdshaderinc,.wgsl src
+strip-comments -w -backup meson.build BUILD rules.bzl
+```
+
+These are lexical rules, not full language parsers. Third-party WGSL
+preprocessors and embedded languages are outside this support. Ada is not
+registered: its apostrophe syntax needs language-specific handling rather than
+the existing C-style character lexer. Always review a dry run before writing.
+
+Rule references: [GDScript](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html),
+[Godot shaders](https://docs.godotengine.org/en/stable/tutorials/shaders/shader_reference/shading_language.html),
+[WGSL](https://www.w3.org/TR/WGSL/), [Meson](https://mesonbuild.com/Syntax.html),
+and [Starlark](https://github.com/bazelbuild/starlark/blob/master/spec.md).
+
 ## Install
 
 Download a binary from [Releases](../../releases). They are static and have no
@@ -185,6 +218,109 @@ demolition, 社工 a social worker, 中间人 a broker, 钓鱼 fishing, 目录�
 ordinary directory walk and 红队 a sports side. Acronyms (`C2`, `MITM`, `RCE`,
 `SSRF`, `LFI`) are matched case-sensitively and as whole words, so `0xC2`,
 `C2H5OH`, `FORCE`, `SOURCE` and a `c2` or `rce` variable are left alone.
+
+Additional authentication and session review terms:
+
+| from | to |
+| --- | --- |
+| 密码喷洒 / 口令喷洒 | 批量认证风险核查 |
+| 浏览器会话劫持 | 浏览器会话完整性核查 |
+| 远程会话劫持 | 远程会话完整性核查 |
+| `password spraying` / `password spray` | `bulk authentication review` |
+| `browser session hijacking` | `browser session integrity review` |
+| `remote service session hijacking` | `remote session integrity review` |
+| 黄金票据攻击 | Kerberos票据伪造风险核查 |
+| 票据传递攻击 | Kerberos票据复用风险核查 |
+| 凭据转储攻击 | 认证材料暴露风险核查 |
+| `golden ticket attack` | `Kerberos ticket forgery risk review` |
+| `pass the ticket` | `Kerberos ticket reuse risk review` |
+| `OS credential dumping` | `credential exposure risk assessment` |
+| DNS缓存投毒 | 名称解析缓存完整性风险核查 |
+| ARP缓存投毒 | 地址映射完整性风险核查 |
+| `DNS cache poisoning` | `name resolution cache integrity risk review` |
+| `ARP cache poisoning` | `address mapping integrity risk review` |
+| 会话固定攻击 | 会话标识轮换风险核查 |
+| 点击劫持攻击 | 界面交互劫持风险核查 |
+| `session fixation attack` | `session identifier rotation risk review` |
+| `clickjacking attack` | `interface interaction hijack risk review` |
+| HTTP请求走私 | HTTP请求解析差异风险核查 |
+| HTTP响应拆分 | HTTP响应头换行处理风险核查 |
+| `HTTP request smuggling` | `HTTP request parsing inconsistency risk review` |
+| `HTTP response splitting` | `HTTP response header newline handling risk review` |
+| Web缓存投毒 | Web缓存响应完整性风险核查 |
+| Web缓存欺骗 | Web私有响应错误缓存风险核查 |
+| `web cache poisoning` | `web cache response integrity risk review` |
+| `web cache deception` | `web private response caching risk review` |
+| 原型污染攻击 | 对象原型篡改风险核查 |
+| 批量赋值漏洞 | 非预期字段写入风险核查 |
+| `prototype pollution attack` | `object prototype tampering risk review` |
+| `mass assignment vulnerability` | `unintended field modification risk review` |
+| 依赖混淆攻击 | 依赖来源解析风险核查 |
+| 软件包拼写抢注攻击 | 软件包名称仿冒风险核查 |
+| `dependency confusion attack` | `dependency source resolution risk review` |
+| `package typosquatting attack` | `package name impersonation risk review` |
+
+Term names were checked against MITRE ATT&CK's
+[Password Spraying](https://attack.mitre.org/techniques/T1110/003/) and
+[Browser Session Hijacking](https://attack.mitre.org/techniques/T1185/)
+entries and its [technique directory](https://attack.mitre.org/techniques/).
+Ticket and credential terminology also follows
+[Pass the Ticket](https://attack.mitre.org/techniques/T1550/003/) and
+[OS Credential Dumping](https://attack.mitre.org/techniques/T1003/).
+Generic words such as `ticket`, `dumping` and 票据 are not added as rules.
+Name-resolution terminology was checked against
+[MITRE Adversary-in-the-Middle](https://attack.mitre.org/techniques/T1557/) and
+[OWASP DNS Cache Poisoning](https://cornucopia.owasp.org/taxonomy/capec-3.9/142).
+The standalone names `DNS`, `ARP` and `cache` remain unchanged.
+Session and interaction terminology was checked against
+[OWASP Session Fixation](https://community.owasp.org/attacks/Session_fixation) and
+[Clickjacking Defense](https://cheatsheetseries.owasp.org/cheatsheets/Clickjacking_Defense_Cheat_Sheet.html).
+Only the attack phrases are added; `session fixation`, `clickjacking defense`
+and `SessionFixationProtection` stay unchanged.
+HTTP terminology follows [CWE-444](https://cwe.mitre.org/data/definitions/444.html)
+for inconsistent parsing between HTTP components and
+[CWE-113](https://cwe.mitre.org/data/definitions/113.html) for CRLF handling in
+HTTP headers. These remain distinct risks. Only the complete phrases in the
+table match; Chinese forms require the displayed spelling without spaces.
+English forms are case-insensitive with word boundaries, and all-uppercase
+input carries its casing to the output. `HTTP`, `request`, `response`,
+`CWE-444`, `CWE-113`, `Content-Length` and `Transfer-Encoding` are not rules.
+Web-cache terminology follows
+[OWASP Web Cache Security](https://cheatsheetseries.owasp.org/cheatsheets/Web_Cache_Security_Cheat_Sheet.html)
+and [PortSwigger Web Cache Deception](https://portswigger.net/web-security/web-cache-deception).
+Poisoning concerns the integrity of cached responses; deception concerns private
+responses being cached incorrectly and exposed. Their replacement phrases
+remain distinct, and the existing DNS/ARP mappings are unchanged. Only the
+complete phrases in the table match: Chinese forms require the displayed
+`Web` casing without spaces; English forms use case-insensitive word boundaries.
+Standalone `cache poisoning`, `cache deception`, 缓存投毒 and 缓存欺骗 are not rules.
+Object-attribute terminology follows [CWE-1321](https://cwe.mitre.org/data/definitions/1321.html)
+and [OWASP Mass Assignment](https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html).
+Prototype tampering and unintended field modification remain distinct risks;
+[CWE-915](https://cwe.mitre.org/data/definitions/915.html) is a broader attribute
+modification weakness, not an exact synonym for mass assignment. Only the full
+attack/vulnerability phrases are rules. Standard terms `prototype pollution`,
+`mass assignment`, ordinary 批量赋值, protection names and `__proto__`,
+`constructor`, `prototype`, `CWE-1321`, `CWE-915` stay unchanged.
+Dependency terminology follows
+[OWASP Dependency Chain Abuse](https://owasp.github.io/www-project-top-10-ci-cd-security-risks/CICD-SEC-03-Dependency-Chain-Abuse)
+and [CI/CD Security](https://cheatsheetseries.owasp.org/cheatsheets/CI_CD_Security_Cheat_Sheet.html).
+Non-intended dependency source resolution differs from package-name
+impersonation; the original 供应链攻击 mapping remains unchanged. Only the
+attack phrases in the table are rules, not `dependency confusion`,
+`typosquatting` or generic package/dependency words. Existing import, package
+and URL guards take precedence: `package typosquatting attack` at the start
+of a line (including a comment after its marker) is left untouched. In normal
+prose such as `a package typosquatting attack`, the complete phrase matches.
+Real package names and import paths are not renamed by these rules.
+Replacement phrases are project-specific display wording, not standard
+synonyms. Renaming does not remediate vulnerabilities or guarantee unchanged
+program behavior, and is not a way to bypass safety review.
+
+Java `.java` files already support line comments, block comments and Javadoc.
+`-keep-doc` preserves Javadoc; comment markers in strings, character literals
+and text blocks remain intact. CLI regression tests compile the stripped
+fixture with Java 17 when `javac` is available.
 
 Standard vulnerability names such as SQL注入, XSS and CSRF are deliberately not
 in the table: they are the precise term, and replacing them would make the code

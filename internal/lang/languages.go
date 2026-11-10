@@ -382,6 +382,23 @@ func init() {
 					append(append([]string{}, bracketPairs...), "/", "/", "|", "|")...)...)},
 		{Name: "vim", Exts: []string{".vim"}, Filenames: []string{".vimrc", "_vimrc"}, Risky: true,
 			Line: []LineComment{{Token: `"`, AtLineStart: true}}},
+		{Name: "gdscript", Exts: []string{".gd"},
+			Line: []LineComment{{Token: "##", Doc: true}, ln("#")},
+			Strings: []StringRule{q(`"""`, '\\', true), q(`'''`, '\\', true),
+				q(`"`, '\\', false), q(`'`, '\\', false)}},
+		{Name: "gdshader", Exts: []string{".gdshader", ".gdshaderinc"},
+			Line: slashLine(false), Block: slashBlock(false, "/**"),
+			Strings: []StringRule{q(`"`, '\\', false)}},
+		{Name: "wgsl", Exts: []string{".wgsl"},
+			Line: slashLine(false), Block: slashBlock(true)},
+		{Name: "meson", Filenames: []string{"meson.build", "meson.options", "meson_options.txt"},
+			Line: []LineComment{ln("#")},
+			// Meson's triple-quoted strings do not interpret escapes.
+			Strings: []StringRule{q(`'''`, 0, true), q(`'`, '\\', false)}},
+		{Name: "starlark", Exts: []string{".bzl", ".bazel"},
+			Filenames: []string{"BUILD", "WORKSPACE"}, Line: []LineComment{ln("#")},
+			Strings: []StringRule{q(`"""`, '\\', true), q(`'''`, '\\', true),
+				q(`"`, '\\', false), q(`'`, '\\', false)}},
 		// matlab has no extension (.m is objc). `%` needs a word boundary so a
 		// quote mistaken for the transpose operator cannot expose `'50%'`.
 		{Name: "matlab", Risky: true, Keep: []string{`^%#`},
