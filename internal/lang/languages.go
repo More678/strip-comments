@@ -203,7 +203,8 @@ func init() {
 			CharLiteral: true, Keep: keepGo,
 			Strings: []StringRule{q(`"`, '\\', false), q("`", 0, true)}},
 		{Name: "rust", Exts: []string{".rs"}, Line: slashLine(false, "///", "//!"),
-			Block: slashBlock(true, "/**", "/*!"), CharLiteral: true, Raw: []string{"rust_raw"},
+			// Rust /*** is ordinary, not outer documentation.
+			Block: append(slashBlock(true, "/**", "/*!"), nested("/***", "*/")), CharLiteral: true, Raw: []string{"rust_raw"},
 			Strings: []StringRule{q(`"`, '\\', true)}},
 		{Name: "swift", Exts: []string{".swift"}, Line: slashLine(false, "///"),
 			Block: slashBlock(true, "/**"), Keep: keepSwift,

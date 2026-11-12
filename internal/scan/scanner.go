@@ -103,7 +103,7 @@ func buildRecipe(l *lang.Language) *recipe {
 			}
 		case "rust_raw":
 			r.rustRaw = true
-			r.interest['r'], r.interest['b'] = true, true
+			r.interest['r'], r.interest['b'], r.interest['c'] = true, true, true
 		case "lua_long":
 			r.luaLong = true
 			r.interest['-'], r.interest['['] = true, true
@@ -349,6 +349,9 @@ func (s *scanner) resyncBOL(off int) {
 // not a valid char literal.
 func (s *scanner) stringAt(i int) (int, string, bool) {
 	src, l := s.src, s.l
+	if l.Name == "csharp" {
+		return s.csharpStringAt(i, 0)
+	}
 	for _, ri := range s.r.strs {
 		sr := &l.Strings[ri]
 		if !hasPrefixAt(src, i, sr.Start, false) {

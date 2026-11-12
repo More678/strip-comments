@@ -368,7 +368,7 @@ func (s *scanner) rawAt(i int) (end int, isCmt bool, reason string, ok bool) {
 			return end, false, reason, true
 		}
 	}
-	if r.rustRaw && (c == 'r' || c == 'b') {
+	if r.rustRaw && (c == 'r' || c == 'b' || c == 'c') {
 		if end, reason, ok := rustRawAt(src, i); ok {
 			return end, false, reason, true
 		}
@@ -411,10 +411,10 @@ func cppRawAt(src []byte, i int) (int, string, bool) {
 	return j + 1 + k + len(closer), "", true
 }
 
-// rustRawAt matches `r#"..."#` / `br##"..."##` with any number of hashes.
+// rustRawAt matches r, br and cr strings with optional hash delimiters.
 func rustRawAt(src []byte, i int) (int, string, bool) {
 	j := i
-	if src[j] == 'b' {
+	if src[j] == 'b' || src[j] == 'c' {
 		j++
 	}
 	if j >= len(src) || src[j] != 'r' {

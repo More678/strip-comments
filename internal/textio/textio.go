@@ -109,31 +109,53 @@ func WriteAtomic(path string, data []byte) error {
 
 // WriteAtomicMode is WriteAtomic with an explicit file mode.
 func WriteAtomicMode(path string, data []byte, mode os.FileMode) error {
+	name, err := writeTemp(path, data, mode)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(name)
+	return os.Rename(name, path)
+}
+
+// WriteExclusive publishes a complete file without replacing any existing path.
+// Filesystems without hard links fail closed rather than risk a partial backup.
+func WriteExclusive(path string, data []byte, mode os.FileMode) error {
+	name, err := writeTemp(path, data, mode)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(name)
+	return os.Link(name, path)
+}
+
+func writeTemp(path string, data []byte, mode os.FileMode) (name string, err error) {
 	dir, base := filepath.Split(path)
 	if dir == "" {
 		dir = "."
 	}
 	tmp, err := os.CreateTemp(dir, "."+base+".strip-*")
 	if err != nil {
-		return err
+		return "", err
 	}
-	name := tmp.Name()
+	name = tmp.Name()
 	defer func() {
 		tmp.Close()
-		os.Remove(name) // no-op once the rename succeeded
+		if err != nil {
+			os.Remove(tmp.Name())
+		}
 	}()
 
 	if _, err := tmp.Write(data); err != nil {
-		return err
+		return "", err
 	}
 	if err := tmp.Sync(); err != nil {
-		return err
+		return "", err
 	}
 	if err := tmp.Close(); err != nil {
-		return err
+		return "", err
 	}
 	if err := os.Chmod(name, mode); err != nil {
-		return err
+		return "", err
 	}
-	return os.Rename(name, path)
+	return name, nil
 }

@@ -51,14 +51,14 @@ const (
 )
 
 type config struct {
-	write   bool
-	backup  bool
-	stdout  bool
-	force   bool
-	risky   bool
-	quiet   bool
-	lang    *lang.Language
-	workers int
+	write    bool
+	noBackup bool
+	stdout   bool
+	force    bool
+	risky    bool
+	quiet    bool
+	lang     *lang.Language
+	workers  int
 	// showTerms lists each term replacement under its file. It is the main
 	// point of a dry run with -replace, so it is on whenever -replace is.
 	showTerms bool
@@ -93,7 +93,8 @@ func run(args []string) int {
 	var (
 		write     = fs.Bool("w", false, "rewrite the files in place (default: dry run)")
 		writeLong = fs.Bool("write", false, "alias for -w")
-		backup    = fs.Bool("backup", false, "keep <file>.bak before rewriting (with -w)")
+		backup    = fs.Bool("backup", true, "keep <file>.bak before rewriting; -backup=false opts out")
+		restore   = fs.Bool("restore", false, "restore named source files from <file>.bak (preview unless -w)")
 		toStdout  = fs.Bool("stdout", false, "print one stripped file to stdout, write nothing")
 		langName  = fs.String("lang", "", "force this language (see -list)")
 		extList   = fs.String("ext", "", "only these extensions, e.g. \".go,.rs\"")
@@ -124,6 +125,27 @@ func run(args []string) int {
 		return exitUsage
 	}
 
+	if *restore {
+		// Restoration copies bytes, so transformation and traversal flags cannot apply.
+		invalid := ""
+		fs.Visit(func(f *flag.Flag) {
+			switch f.Name {
+			case "restore", "w", "write", "q", "allow-secrets":
+			default:
+				invalid = f.Name
+			}
+		})
+		if invalid != "" {
+			fmt.Fprintf(os.Stderr, "-restore cannot be combined with -%s\n", invalid)
+			return exitUsage
+		}
+		if fs.NArg() == 0 {
+			fmt.Fprintln(os.Stderr, "-restore needs explicit source file paths (not directories or .bak files)")
+			return exitUsage
+		}
+		return runRestore(fs.Args(), *write || *writeLong, *quiet, *allowSec)
+	}
+
 	switch {
 	case *showVer:
 		fmt.Printf("strip-comments %s\n", buildVersion())
@@ -142,13 +164,13 @@ func run(args []string) int {
 	}
 
 	cfg := config{
-		write:   *write || *writeLong,
-		backup:  *backup,
-		stdout:  *toStdout,
-		force:   *force,
-		risky:   *risky,
-		quiet:   *quiet,
-		workers: *jobs,
+		write:    *write || *writeLong,
+		noBackup: !*backup,
+		stdout:   *toStdout,
+		force:    *force,
+		risky:    *risky,
+		quiet:    *quiet,
+		workers:  *jobs,
 
 		allowSecrets: *allowSec,
 		noVerify:     *noVerify,
@@ -390,9 +412,9 @@ func stripOne(f walk.File, cfg config, opt scan.Options) result {
 	if !cfg.write {
 		return res
 	}
-	if cfg.backup {
-		if err := textio.WriteAtomicMode(f.Path+".bak", raw, f.Mode.Perm()); err != nil {
-			res.err = err
+	if !cfg.noBackup {
+		if err := textio.WriteExclusive(f.Path+".bak", raw, f.Mode.Perm()); err != nil {
+			res.err = fmt.Errorf("backup failed; source unchanged: %w", err)
 			return res
 		}
 	}

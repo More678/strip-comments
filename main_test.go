@@ -129,7 +129,7 @@ func TestStripOne(t *testing.T) {
 func TestStripOneBackup(t *testing.T) {
 	in := "package p\nvar x = 1 // c\n"
 	f := fixture(t, "a.go", in)
-	res := stripOne(f, config{write: true, backup: true}, scan.Options{})
+	res := stripOne(f, config{write: true}, scan.Options{})
 	if res.err != nil {
 		t.Fatalf("err = %v", res.err)
 	}
@@ -146,7 +146,7 @@ func TestStripOneBackup(t *testing.T) {
 
 func TestStripOneNoBackupWhenUnchanged(t *testing.T) {
 	f := fixture(t, "a.go", "package p\nvar x = 1\n")
-	if res := stripOne(f, config{write: true, backup: true}, scan.Options{}); res.err != nil {
+	if res := stripOne(f, config{write: true}, scan.Options{}); res.err != nil {
 		t.Fatalf("err = %v", res.err)
 	}
 	if _, err := os.Stat(f.Path + ".bak"); !os.IsNotExist(err) {
