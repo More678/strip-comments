@@ -405,6 +405,41 @@ Additional authentication and session review terms:
 | OAuth刷新令牌重放攻击 | OAuth刷新令牌重放风险核查 |
 | `OAuth refresh token replay attack` | `OAuth refresh token replay risk review` |
 | `padding oracle attack` | `padding oracle risk review` |
+| `reverse tabnabbing attack` | `reverse tabnabbing risk review` |
+| 跨站脚本包含攻击 | 跨站脚本包含数据泄露风险核查 |
+| `cross site script inclusion attack` | `cross site script inclusion data exposure risk review` |
+| CSS注入攻击 | CSS样式注入风险核查 |
+| `CSS injection attack` | `CSS style injection risk review` |
+| SSI注入攻击 | SSI服务端包含指令注入风险核查 |
+| `SSI injection attack` | `SSI server-side include directive injection risk review` |
+| `IDN homograph attack` | `IDN homograph domain spoofing risk review` |
+| 操作系统命令参数注入攻击 | 操作系统命令参数注入风险核查 |
+| `OS command argument injection attack` | `OS command argument injection risk review` |
+| `session puzzling attack` | `session variable overloading risk review` |
+| 表达式语言注入攻击 | 表达式语言求值注入风险核查 |
+| `expression language injection attack` | `expression language evaluation injection risk review` |
+| `reflected file download attack` | `reflected file download risk review` |
+| CORS错误配置漏洞 | CORS错误配置风险核查 |
+| `CORS misconfiguration vulnerability` | `CORS misconfiguration risk review` |
+| XQuery注入攻击 | XQuery查询结构注入风险核查 |
+| `XQuery injection attack` | `XQuery query structure injection risk review` |
+| PHP对象注入攻击 | PHP反序列化对象注入风险核查 |
+| `PHP object injection attack` | `PHP deserialization object injection risk review` |
+| TLS证书主机名验证漏洞 | TLS证书主机名验证风险核查 |
+| `TLS certificate hostname validation vulnerability` | `TLS certificate hostname validation risk review` |
+| 外部可控反射漏洞 | 外部可控反射代码选择风险核查 |
+| `externally controlled reflection vulnerability` | `externally controlled reflection code selection risk review` |
+| 不可信搜索路径漏洞 | 不可信搜索路径资源选择风险核查 |
+| `untrusted search path vulnerability` | `untrusted search path resource selection risk review` |
+| `cryptographically weak PRNG vulnerability` | `cryptographically weak PRNG risk review` |
+| postMessage来源验证漏洞 | postMessage来源验证风险核查 |
+| `postMessage origin validation vulnerability` | `postMessage origin validation risk review` |
+| 不受限文件上传漏洞 | 不受限文件上传风险核查 |
+| `unrestricted file upload vulnerability` | `unrestricted file upload risk review` |
+| `signed to unsigned conversion vulnerability` | `signed to unsigned conversion risk review` |
+| `double-checked locking vulnerability` | `double-checked locking initialization visibility risk review` |
+| 未检查返回值漏洞 | 未检查返回值风险核查 |
+| `unchecked return value vulnerability` | `unchecked return value risk review` |
 
 Term names were checked against MITRE ATT&CK's
 [Password Spraying](https://attack.mitre.org/techniques/T1110/003/) and
@@ -820,6 +855,328 @@ literal spaces. Standard terms such as `padding oracle`, `CBC`, `PKCS7` and
 `BadPaddingException` remain unchanged; no Chinese, hyphenated, underscored or
 plural attack aliases are added. Renaming does not unify decryption errors or
 implement authenticated encryption.
+Reverse-tabnabbing terminology follows OWASP Community's
+[Reverse Tabnabbing](https://community.owasp.org/attacks/Reverse_Tabnabbing),
+using its search-index summaries; the full page was not retrievable during
+research. A newly opened page may navigate its opener to an untrusted page when
+an opener reference and the necessary navigation capability remain available.
+Modern browsers give `target="_blank"` links implicit `noopener` behavior; older
+browsers and other opening methods need separate consideration. This is not a
+claim that every new-tab link is vulnerable or that `window.open` always has the
+same defaults. It differs from open redirects and DOM clobbering and does not
+imply arbitrary cross-origin reading of the opener. Only the complete English
+attack phrase above is added with case-insensitive word boundaries and literal
+spaces. `reverse tabnabbing`, API/property names and protection terms remain
+unchanged; no Chinese, spelling or plural aliases are added. Renaming does not
+isolate the opener, add `rel` attributes or implement phishing protection.
+XSSI terminology follows OWASP WSTG's
+[Testing for Cross Site Script Inclusion](https://wstg.owasp.org/stable/4-Web_Application_Security_Testing/11-Client-side_Testing/13-Testing_for_Cross_Site_Script_Inclusion/)
+(WSTG-CLNT-13), using its search-index summaries; the full page was not
+retrievable during research. Cross-origin script inclusion may expose sensitive
+data under particular conditions; ordinary public script loading, JSONP names,
+JSON/CSV files or a logged-in session alone do not establish a vulnerability.
+This concerns unintended data exposure, not injecting untrusted code into a
+page as in XSS, cross-site WebSocket hijacking or reverse tabnabbing. It does
+not imply that every cross-origin script can read private data. Only the two
+complete attack phrases above are added: Chinese uses the fixed spelling and
+English uses case-insensitive word boundaries and literal spaces. `XSSI`,
+`cross site script inclusion`, 跨站脚本包含, protocol fields, API/protection names
+and `WSTG-CLNT-13` remain unchanged. No hyphenated, underscored, acronym-only or
+plural attack aliases are added. Renaming does not configure authentication,
+response policies or resource isolation.
+CSS-injection terminology follows OWASP WSTG's
+[CSS Injection](https://wstg.owasp.org/latest/4-Web_Application_Security_Testing/11-Client-side/05-CSS_Injection/)
+(WSTG-CLNT-05), using its search-index summaries; the full page was not retrieved
+during research. This concerns untrusted CSS interpreted in a trusted site's
+style context, not ordinary style settings or the presence of CSS APIs. Style
+manipulation or data exposure depends on the injection point, page content,
+policies and browser. Legacy-browser script-execution examples are not a claim
+that CSS always executes JavaScript in modern browsers. This is distinct from
+HTML injection, XSSI and arbitrary script execution. Only the two complete
+attack phrases above are added. Chinese requires `CSS` casing and no spaces;
+English uses case-insensitive word boundaries and literal spaces. `CSS`,
+`CSS injection`, `CSS注入`, API/field/protection names and `WSTG-CLNT-05` remain
+unchanged; no stylesheet, translated, hyphenated, underscored or plural attack
+aliases are added. Renaming does not sanitize CSS or configure CSP.
+SSI-injection terminology follows OWASP WSTG's
+[Testing for SSI Injection](https://wstg.owasp.org/v4.2/4-Web_Application_Security_Testing/07-Input_Validation_Testing/08-Testing_for_SSI_Injection/)
+(WSTG-INPV-08), using its search-index summaries; the full page was not
+retrievable during research. This concerns untrusted input interpreted as
+server-side include directives in an SSI-processing context. Normal SSI use,
+trusted directives, file extensions or configuration names alone do not prove a
+vulnerability. Information exposure, file inclusion or command execution depends
+on server configuration, enabled directives, permissions and context; command
+execution is not inevitable. This is distinct from server-side template
+injection, browser XSSI and ordinary module imports. Only the two complete attack
+phrases above are added. Chinese requires `SSI` casing and no spaces; English
+uses case-insensitive word boundaries and literal spaces. `SSI`, `SSI injection`,
+`Server-Side Includes`, `SSI注入`, configuration/API/protection names and
+`WSTG-INPV-08` remain unchanged; no full-name, translated, hyphenated, underscored
+or plural attack aliases are added. Renaming does not disable SSI, validate input
+or change server permissions.
+IDN-homograph terminology follows ICANN's historical
+[IDN Homograph Attacks statement](https://www.icann.org/en/announcements/details/icann-statement-on-idn-homograph-attacks-and-request-for-public-comment-23-2-2005-en)
+(2005-02-23) and Unicode's
+[UTS #39, Revision 29](https://www.unicode.org/reports/tr39/tr39-29.html), using
+search-index summaries rather than retrieved full texts. These support the
+concept of visual domain-name impersonation, not current browser behavior or
+complete compliance with the latest standard. Normal IDNs, Unicode characters,
+Punycode or mixed scripts alone do not establish abuse. Confusability depends
+on display context and is not limited to mixed-script strings. This phrase is
+restricted to IDN domain impersonation, not all lookalike identifiers or package
+typosquatting. Only the complete English attack phrase above is added with
+case-insensitive word boundaries and literal spaces. `IDN`, `IDNA`, `Unicode`,
+`Punycode`, `UTS #39`, `IDN homograph` and API/protection names remain unchanged;
+no Chinese, unqualified, homoglyph, hyphenated, underscored or plural attack
+aliases are added. Renaming does not detect confusables, normalize domains,
+perform IDNA/Punycode conversion or change browser display policies.
+OS-command-argument terminology follows the Argument Injection section of
+OWASP's [OS Command Injection Defense Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html),
+using its search-index summaries; the full page was not retrievable during
+research. This concerns unintended interpretation of untrusted OS command
+arguments or options, not ordinary argument passing, HTTP parameter pollution,
+database parameters or general function arguments. Outcomes depend on the
+invoked command, supported options, privileges and input context; arbitrary
+command execution is not inevitable. Shell-metacharacter escaping alone does
+not resolve every argument-injection risk. Only the two complete OS-qualified
+attack phrases above are added, with fixed Chinese spelling and case-insensitive
+English word boundaries and literal spaces. Standard terms, API names such as
+`exec.Command` and `ProcessStartInfo.ArgumentList`, and `CWE-88` remain unchanged.
+No shorter, hyphenated, underscored or plural attack aliases are added. Renaming
+does not validate arguments, enforce allow-lists or isolate arguments or privileges.
+Session-puzzling terminology follows OWASP WSTG's
+[Testing for Session Puzzling](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/08-Testing_for_Session_Puzzling)
+(WSTG-SESS-08), using search-index summaries; the full page was not retrievable
+during research. This concerns session variables used for inconsistent purposes,
+where state set in one context is incorrectly trusted in another. Ordinary
+session storage, variable reuse or state shared across requests alone does not
+establish a vulnerability. Impact depends on control flow and authorization
+checks, not inevitable authentication bypass. This differs from session fixation,
+token theft or cryptographic confusion. Only the complete English attack phrase
+above is added with case-insensitive word boundaries and literal spaces.
+`session puzzling`, `session variable overloading`, API/protection names and
+`WSTG-SESS-08` remain unchanged; no Chinese, synonymous, hyphenated, underscored
+or plural attack aliases are added. Renaming does not separate session variables,
+validate authorization or rotate session identifiers.
+Expression-language terminology follows OWASP Community's
+[Expression Language Injection](https://community.owasp.org/vulnerabilities/Expression_Language_Injection),
+using search-index summaries rather than retrieved full text. This concerns
+untrusted data interpreted as expression language, not ordinary evaluation of
+trusted expressions or the presence of an API or framework. Data exposure or
+code execution depends on interpreter capabilities, accessible objects,
+permissions and evaluation context; arbitrary code execution is not inevitable.
+This may overlap with template injection but does not equate every template,
+XPath or SQL injection with EL injection. Only the two complete attack phrases
+above are added: fixed Chinese spelling, and case-insensitive English word
+boundaries with literal spaces. `expression language injection`, 表达式语言注入,
+`EL`, `SpEL`, `OGNL`, `UEL`, API/protection names and `CWE-917` remain unchanged.
+No acronym, shorter, hyphenated, underscored or plural attack aliases are added.
+Renaming does not validate expressions, configure a sandbox or restrict interpreter
+permissions, and makes no vulnerability claim about a particular framework version.
+Reflected-file-download terminology follows the OWASP-hosted
+[Less Known Web Application Vulnerabilities](https://wiki.owasp.org/images/4/4e/OWASP-Ionut-Popescu-Less-Known-Web-Application-Vulnerabilities-Stripped.pdf)
+presentation and Oren Hafif's historical SpiderLabs research,
+[Reflected File Download](https://www.levelblue.com/blogs/spiderlabs-blog/reflected-file-download-a-new-web-attack-vector)
+(2014-10-30), using search-index summaries rather than retrieved full texts.
+Reflected input may be returned as downloadable content with an attacker-influenced
+filename or extension; normal downloads, reflected text or a response header alone
+do not establish a vulnerability. Risk depends on content control, download/name
+handling and use context. Downloading does not imply automatic execution; the
+historical execution scenario also requires the user to run the file. This is
+not XSSI, HTML injection or an open redirect and makes no current-browser or
+complete-header-protection claim. Only the complete English attack phrase above
+is added with case-insensitive word boundaries and literal spaces. Standard terms,
+API/protection names and response fields remain unchanged; no Chinese, acronym,
+hyphenated, underscored or plural attack aliases are added. Renaming does not set
+headers, validate filenames, sanitize download contents or prevent execution.
+CORS-misconfiguration terminology follows OWASP WSTG's
+[Cross Origin Resource Sharing](https://wstg.owasp.org/latest/4-Web_Application_Security_Testing/11-Client-side/07-Cross_Origin_Resource_Sharing/)
+(WSTG-CLNT-07), using search-index summaries; the full page was not retrievable
+during research. This concerns configurations permitting unintended origins to
+read responses, with impact depending on resource sensitivity, allowed origins,
+authentication/credential modes and browser checks. Normal CORS use, header names
+or wildcard origins for public resources do not alone establish a vulnerability;
+wildcards combined with credentials do not imply inevitable data exposure.
+CORS is not authentication, authorization, CSRF protection or WebSocket origin
+validation. A browser refusing response access does not mean no request was sent.
+Only the two complete vulnerability phrases above are added. Chinese requires
+`CORS` casing and no spaces; English uses case-insensitive word boundaries and
+literal spaces. Standard terms, header/API/protection names and `WSTG-CLNT-07`
+remain unchanged; no translated, shorter, hyphenated, underscored or plural aliases
+are added. Renaming does not configure response headers, origin allow-lists,
+credentials or authorization.
+XQuery-injection terminology follows MITRE's
+[CWE-652](https://cwe.mitre.org/data/definitions/652.html), cross-referenced by
+[OWASP A03:2021 Injection](https://top10.owasp.org/A03_2021-Injection/), using
+search-index summaries rather than retrieved full text. This concerns external
+input altering XQuery expression structure, not ordinary queries, trusted
+expressions, XML data or query APIs. Impact depends on query context, database
+permissions and application logic; arbitrary code execution or authentication
+bypass is not inevitable. XQuery and XPath are related but not interchangeable,
+and XML external entities or general EL evaluation are separate concepts.
+Only the two complete attack phrases above are added: Chinese requires `XQuery`
+casing and no spaces; English uses case-insensitive word boundaries and literal
+spaces. Standard terms, `XQuery`, `XPath`, `XML`, `FLWOR`, query API/protection
+names and `CWE-652` remain unchanged. No spelling, hyphenated, underscored or
+plural attack aliases are added. Renaming does not bind query parameters,
+validate input or restrict database permissions.
+PHP-object-injection terminology follows OWASP Community's
+[PHP Object Injection](https://community.owasp.org/vulnerabilities/PHP_Object_Injection),
+using search-index summaries rather than retrieved full text or PHP-version
+validation. This concerns untrusted deserialization input and resulting object
+behavior; exploitation depends on available classes, dangerous magic methods or
+object call chains, loading conditions, permissions and application context.
+Normal object creation, trusted deserialization or an API/magic-method name alone
+does not prove a vulnerability. Arbitrary code execution is not inevitable, and
+neither generic sanitization nor a single option is claimed as complete protection.
+This is distinct from prototype pollution, mass assignment and EL injection.
+Only the two complete PHP-qualified attack phrases above are added: fixed `PHP`
+casing and no spaces in Chinese, case-insensitive word boundaries and literal
+spaces in English. Standard terms, `unserialize`, magic-method names,
+`allowed_classes` and API/protection names remain unchanged. No unqualified,
+translated, hyphenated, underscored or plural attack aliases are added. Renaming
+does not validate serialized input, disable magic methods or configure class allow-lists.
+TLS-certificate-hostname terminology follows MITRE's
+[CWE-297](https://cwe.mitre.org/data/definitions/297.html), using search-index
+summaries rather than retrieved full text or complete TLS-specification validation.
+This concerns failure to verify that a certificate identifies the intended host;
+a trusted signature or certificate chain alone does not establish that match.
+Normal validation, rejection of a mismatched connection or an API/configuration
+name alone does not prove a vulnerability. Impact depends on client settings,
+connection paths and attack conditions; a mismatch does not prove a hijack.
+This is distinct from expired certificates, untrusted CAs, TLS downgrade and IDN
+character confusion. Only the two complete TLS-qualified vulnerability phrases
+above are added. Chinese requires `TLS` casing and no spaces; English uses
+case-insensitive word boundaries and literal spaces. Standard terms, `VerifyHostname`,
+`ServerName`, `HostnameVerifier`, `InsecureSkipVerify`, other API/protection names
+and `CWE-297` remain unchanged; no unqualified, verification-spelling, hyphenated,
+underscored or plural aliases are added. Renaming does not validate certificates,
+configure hostnames or trust stores, or change TLS connections.
+Externally-controlled-reflection terminology follows MITRE's
+[CWE-470](https://cwe.mitre.org/data/definitions/470.html), using search-index
+summaries rather than retrieved full text or language/framework-version validation.
+This concerns insufficiently restricted external input selecting classes or code
+through reflection. Ordinary reflection, trusted class names, allow-listed plugin
+selection or API names alone do not prove a vulnerability. Code execution,
+authorization bypass or crashes depend on available classes/methods, permissions
+and call context; none is inevitable. This is not synonymous with all dynamic
+loading, deserialization, expression evaluation or reflected file downloads.
+Only the two complete vulnerability phrases above are added: fixed Chinese
+spelling and case-insensitive English word boundaries with literal spaces.
+`unsafe reflection`, `externally controlled reflection`, API/protection names
+and `CWE-470` remain unchanged; no synonymous, hyphenated, underscored or plural
+aliases are added. Renaming does not constrain class/method selection or configure
+allow-lists or permissions.
+Untrusted-search-path terminology follows MITRE's
+[CWE-426](https://cwe.mitre.org/data/definitions/426.html), using search-index
+summaries rather than retrieved full text or platform-loader validation.
+This concerns externally controlled search paths selecting critical resources
+outside the program's control. Control of the search path itself differs from
+CWE-427's writable location within an otherwise fixed path. Ordinary PATH
+settings, trusted plugin directories, relative paths or resource-lookup APIs
+alone do not establish a vulnerability. Impact depends on attacker control,
+lookup/loading order, available resources and privileges; code execution or
+privilege escalation is not inevitable. This does not equate all DLL hijacking,
+directory traversal or externally controlled reflection with this weakness.
+Only the two complete vulnerability phrases above are added: fixed Chinese
+spelling and case-insensitive English word boundaries with literal spaces.
+Standard terms, environment variables, API/protection names and `CWE-426`/`CWE-427`
+remain unchanged; no synonymous, hyphenated, underscored or plural aliases are
+added. Renaming does not change environment variables, validate paths or configure
+directory permissions or loading order.
+Cryptographically-weak-PRNG terminology follows MITRE's
+[CWE-338](https://cwe.mitre.org/data/definitions/338.html), using search-index
+summaries rather than retrieved full text or algorithm-implementation validation.
+This concerns a generator lacking cryptographic strength used in a security
+context. Ordinary simulations, tests, sampling or other non-security PRNG uses
+are not automatically vulnerabilities. API names, determinism or fixed seeds
+alone do not establish application risk; purpose and implementation matter.
+This is not synonymous with all entropy, seed-management or repeated-value
+problems, and predictable output does not guarantee key recovery or account
+compromise. Only the complete English vulnerability phrase above is added with
+case-insensitive word boundaries and literal spaces. `PRNG`, `CSPRNG`, standard
+terms, API/protection names and `CWE-338` remain unchanged; no Chinese, expanded,
+shorter, hyphenated, underscored or plural aliases are added. Renaming does not
+replace generators, add entropy or manage seeds.
+postMessage-origin-validation terminology follows OWASP WSTG's
+[Web Messaging](https://wstg.owasp.org/latest/4-Web_Application_Security_Testing/11-Client-side/11-Web_Messaging/)
+(WSTG-CLNT-11), using search-index summaries rather than retrieved full text or
+browser-implementation validation. This concerns missing or incorrect receiver
+origin checks causing unintended messages to be trusted, not ordinary cross-window
+communication or an API name alone. Impact depends on message purpose, receiver
+authorization/data handling and reachable contexts; XSS or authentication bypass
+is not inevitable. Receiver origin validation differs from sender `targetOrigin`
+restrictions and message-content validation, and replaces neither content checks
+nor business authorization. It is not the same mechanism as CORS or WebSocket
+origin validation. Only the two complete vulnerability phrases above are added:
+fixed `postMessage` casing and no spaces in Chinese, case-insensitive word
+boundaries and literal spaces in English. Standard terms, event properties,
+API/protection names and `WSTG-CLNT-11` remain unchanged; no unqualified,
+verification-spelling, hyphenated, underscored or plural aliases are added.
+Renaming does not validate origins, configure `targetOrigin`, check messages
+or enforce authorization.
+Unrestricted-file-upload terminology follows OWASP's
+[Unrestricted File Upload](https://community.owasp.org/vulnerabilities/Unrestricted_File_Upload),
+[File Upload Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html)
+and MITRE's [CWE-434](https://cwe.mitre.org/data/definitions/434.html), using search-index
+summaries rather than retrieved full text or server-implementation validation.
+This concerns inadequate upload restrictions allowing dangerous content into
+storage or processing; CWE-434 specifically concerns dangerous file types and
+is not synonymous with every upload issue. Impact depends on file type, storage,
+processing components and permissions. Accepting an upload does not prove code
+execution. Normal uploads, extensions, MIME types or API names alone do not prove
+a vulnerability. MIME/signature checks alone are not claimed as complete protection,
+nor does storage outside the webroot eliminate all processing risks. Only the two
+complete vulnerability phrases above are added: fixed Chinese spelling and
+case-insensitive English word boundaries with literal spaces. Standard terms,
+API/protection names and `CWE-434` remain unchanged; no synonymous, shorter,
+hyphenated, underscored or plural aliases are added. Renaming does not validate
+file types or configure storage permissions, upload limits or scanners.
+Signed-to-unsigned-conversion terminology follows MITRE's
+[CWE-195](https://cwe.mitre.org/data/definitions/195.html), using search-index
+summaries rather than retrieved full text or complete language/platform validation.
+This concerns unexpected results when converting signed values to unsigned types;
+negative values used as unsigned lengths may affect subsequent allocation or memory
+operations. Results depend on language, type width, checks and later use. Normal
+controlled conversions, type names, explicit casts or negative test values alone
+do not establish a vulnerability. Not every conversion is undefined behavior or
+necessarily causes an out-of-bounds access. This differs from arithmetic overflow,
+underflow, unsigned-to-signed conversion, truncation and general type confusion.
+Only the complete English vulnerability phrase above is added with case-insensitive
+word boundaries and literal spaces. Standard terms, type/API/protection names and
+`CWE-195` remain unchanged; no Chinese, reverse-direction, shorter, hyphenated,
+underscored or plural aliases are added. Renaming does not check ranges, change
+numeric types or add conversion guards.
+Double-checked-locking terminology follows MITRE's
+[CWE-609](https://cwe.mitre.org/data/definitions/609.html), using search-index
+summaries rather than retrieved full text or complete memory-model validation.
+Insufficient synchronization may let readers bypassing a lock observe an
+incompletely initialized object. Preventing duplicate initialization does not
+alone guarantee safe publication or visibility. Correctness depends on language,
+version, memory model, synchronization and access paths; not every implementation
+of the pattern is unsafe. The source's Java 5+ `volatile` discussion is not a claim
+that adding `volatile` fixes this in every language. Normal lazy initialization,
+locks, atomic variables or API names alone do not establish a vulnerability.
+Only the complete English vulnerability phrase above is added with case-insensitive
+word boundaries and literal spaces. Standard terms, `DCL`, `volatile`, `sync.Once`,
+`call_once`, synchronization/API/protection names and `CWE-609` remain unchanged;
+no Chinese, unhyphenated, acronym-only, underscored or plural aliases are added.
+Renaming does not add locks, insert memory barriers or establish happens-before.
+Unchecked-return-value terminology follows MITRE's
+[CWE-252](https://cwe.mitre.org/data/definitions/252.html), using search-index
+summaries rather than retrieved full text or validation of every API contract.
+Ignoring a function or method result may leave a failure or unexpected state
+undetected. Risk depends on result semantics, caller assumptions and error
+handling; deliberately discarding an irrelevant result, a void function or an
+API name alone does not establish a vulnerability. This differs from incorrectly
+checking a return value (CWE-253), general exception handling or all null-pointer
+problems. Crashes, privilege violations or code execution are not inevitable.
+Only the two complete vulnerability phrases above are added: fixed Chinese
+spelling and case-insensitive English word boundaries with literal spaces.
+Standard terms, `nodiscard`, `warn_unused_result`, API/protection names and
+`CWE-252`/`CWE-253` remain unchanged; no synonymous, shorter, hyphenated,
+underscored or plural aliases are added. Renaming does not check results,
+add error handling or implement rollback.
 Replacement phrases are project-specific display wording, not standard
 synonyms. Renaming does not remediate vulnerabilities or guarantee unchanged
 program behavior, and is not a way to bypass safety review.

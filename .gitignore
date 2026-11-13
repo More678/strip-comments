@@ -3,6 +3,8 @@
 
 # Internal development notes from the agents that built this.
 /.reports/
+# Local Claude Code session state.
+/.claude/
 
 # Backups written by `strip-comments -backup`.
 *.bak
