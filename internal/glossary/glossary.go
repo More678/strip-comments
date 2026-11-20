@@ -39,7 +39,7 @@ type Hit struct {
 // "渗透"; Rules() enforces that regardless of the order written here.
 //
 // Override the whole table with a user file rather than editing this list.
-var Default = []Rule{
+var Default = append([]Rule{
 	// Chinese: no word boundary, CJK has no word characters.
 	{From: "渗透测试", To: "威胁检测"},
 	{From: "渗透攻击", To: "威胁检测"},
@@ -280,6 +280,76 @@ var Default = []Rule{
 	{From: "double-checked locking vulnerability", To: "double-checked locking initialization visibility risk review", Word: true, CI: true},
 	{From: "未检查返回值漏洞", To: "未检查返回值风险核查"},
 	{From: "unchecked return value vulnerability", To: "unchecked return value risk review", Word: true, CI: true},
+	{From: "主机型入侵检测系统", To: "基于主机的入侵检测系统"},
+	{From: "网络型入侵检测系统", To: "基于网络的入侵检测系统"},
+	// Keep IDS case-sensitive: IDs can mean identifiers instead.
+	{From: "host-based IDS", To: "host-based intrusion detection system", Word: true},
+	{From: "network-based IDS", To: "network intrusion detection system", Word: true},
+}, auditRules...)
+
+// NewAuditTable prepares only the meaning-preserving audit rules for the browser preview.
+func NewAuditTable() *Table { return NewTable(auditRules) }
+
+var auditRules = []Rule{
+	{From: "audit record retention period", To: "retention period for audit records", Word: true, CI: true},
+	{From: "timestamps for audit records", To: "time stamps for audit records", Word: true, CI: true},
+	{From: "audit event result", To: "outcome of the audited event", Word: true, CI: true},
+	{From: "allocate audit log storage capacity", To: "allocate storage capacity for audit logs", Word: true, CI: true},
+	{From: "the disk with the audit log is almost full", To: "the disk holding the audit log is nearly full", Word: true, CI: true},
+	{From: "rotation of audit log files", To: "audit log file rotation", Word: true, CI: true},
+	{From: "compression of rotated audit log files", To: "compression of audit log files that have been rotated", Word: true, CI: true},
+	{From: "verify audit log file integrity", To: "verify the integrity of the audit log file", Word: true, CI: true},
+	{From: "provides read-only access to audit records", To: "allows read-only access to audit records", Word: true, CI: true},
+	{From: "original time ordering of audit records", To: "original chronological order of audit records", Word: true, CI: true},
+	{From: "the original content of audit records is preserved", To: "the original content of audit records is kept intact", Word: true, CI: true},
+	{From: "generate on-demand audit reports", To: "generate audit reports on demand", Word: true, CI: true},
+	{From: "search and filter audit records by event type", To: "search and filter audit log entries by event type", Word: true, CI: true},
+	{From: "find all audit records within a time range", To: "find all audit records in a specified time range", Word: true, CI: true},
+	{From: "search audit records by actor", To: "query audit records by actor", Word: true, CI: true},
+	{From: "get audit logs containing a given target resource", To: "retrieve audit logs containing a given target resource", Word: true, CI: true},
+	{From: "Get audit logs by correlation ID", To: "Retrieve audit logs by correlation ID", Word: true},
+	{From: "get the next page of audit logs", To: "retrieve the next page of audit logs", Word: true, CI: true},
+	{From: "maximum number of audit logs to return per page", To: "maximum number of audit logs to return on any one page", Word: true, CI: true},
+	{From: "export the results of an audit log search to a CSV file", To: "export audit log search results to a CSV file", Word: true},
+	{From: "create a saved audit log filter", To: "save a new audit log filter", Word: true, CI: true},
+	{From: "clear all audit log filters and reload", To: "clear every audit log filter and reload", Word: true, CI: true},
+	{From: "when you expand an audit log entry, you see exactly what changed", To: "expanding an audit log entry shows you exactly what changed", Word: true, CI: true},
+	{From: "the audit log shows the old and new values", To: "the audit log shows the before and after values", Word: true, CI: true},
+	{From: "Copy Audit Event ID", To: "Copy Audit Event Identifier", Word: true},
+	{From: "timestamps in the audit logs table and detail view are displayed in your local time zone", To: "timestamps in the audit logs table and detail view are shown in your local time zone", Word: true, CI: true},
+	{From: "The time the event described by the log entry occurred", To: "When the event described by the log entry occurred", Word: true},
+	{From: "The time the log entry was received by Logging", To: "When the log entry was received by Logging", Word: true},
+	{From: "no audit logs match your filters", To: "no audit log entries match your filters", Word: true, CI: true},
+	{From: "Loading audit log entries", To: "Loading audit log records", Word: true},
+	{From: "Retry loading audit logs", To: "Try loading audit logs again", Word: true},
+	{From: "audit log query timed out", To: "audit log query did not return in time", Word: true, CI: true},
+	{From: "Cancel a running CloudTrail Lake query", To: "Request cancellation of a running CloudTrail Lake query", Word: true},
+	{From: "Get the status of a CloudTrail Lake query", To: "Check the status of a CloudTrail Lake query", Word: true},
+	{From: "If the query results were delivered to an S3 bucket, the response also provides the S3 URI and the delivery status", To: "If the query results were delivered to an S3 bucket, the response also includes the S3 URI and the delivery status", Word: true},
+	{From: "The number of events that the query scanned in the event data store", To: "How many events the query scanned in the event data store", Word: true},
+	{From: "The total bytes that the query scanned in the event data store", To: "The total number of bytes that the query scanned in the event data store", Word: true},
+	{From: "The query's run time, in milliseconds", To: "The duration of query execution in milliseconds", Word: true},
+	{From: "Lists matching query results, and shows query ID, status, and creation time of each query", To: "Lists matching query results and shows the ID, status, and creation time for each query", Word: true},
+	{From: "The status of queries that you want to return in results", To: "The status to match when listing queries", Word: true},
+	{From: "to bound a ListQueries request, and limit its results to only those queries run within a specified time period", To: "to limit ListQueries results to queries run within the specified time range", Word: true},
+	{From: "The ARN (or the ID suffix of the ARN) of an event data store on which queries were run", To: "The ARN or its ID suffix for the event data store where the queries ran", Word: true},
+	{From: "NextPage retrieves the next ListQueries page", To: "NextPage retrieves the next page from ListQueries", Word: true},
+	{From: "The maximum number of queries to show on a page", To: "The maximum number of queries to list per page", Word: true},
+	{From: "The error message returned if a query failed", To: "The error message returned if the query itself failed", Word: true},
+	{From: "invalid audit log page token", To: "invalid audit log pagination token", Word: true, CI: true},
+	{From: "Information about whether the event is a write event or a read event", To: "Whether the event is classified as a write or a read", Word: true},
+	{From: "failed to lookup CloudTrail events by event name", To: "failed to look up CloudTrail events by event name", Word: true},
+	{From: "Retrieves a specific audit event by its ID", To: "Retrieves a specific audit event by its identifier", Word: true},
+	{From: "Parameter for filtering audit logs by resource type", To: "Parameter to filter audit logs by resource type", Word: true},
+	{From: "Get audit logs by source IP", To: "Retrieve audit logs by source IP", Word: true},
+	{From: "Filter OpenShift API server audit logs by user agent", To: "Filter OpenShift API server audit log entries by user agent", Word: true},
+	{From: "Find audit logs by HTTP status code", To: "Find audit log entries by HTTP status code", Word: true},
+	{From: "Find audit logs by HTTP method", To: "Find audit log entries by HTTP method", Word: true},
+	{From: "Find audit logs by request path", To: "Find audit log entries by request path", Word: true},
+	{From: "auth_decision: Filter by authorization decision", To: "auth_decision: Authorization decision to match", Word: true},
+	{From: "Filter by minimum request duration in milliseconds", To: "Filter by minimum request duration in ms", Word: true},
+	{From: "Filter by maximum request duration in milliseconds", To: "Filter by maximum request duration in ms", Word: true},
+	{From: "This filters all TLS connections with 1.1 and below", To: "This filters all TLS connections using version 1.1 or lower", Word: true},
 }
 
 // asciiEdges reports whether term begins and ends with an ASCII letter or

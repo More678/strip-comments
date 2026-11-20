@@ -95,6 +95,18 @@ Or build from source with Go 1.22+:
 go install github.com/More678/strip-comments@latest
 ```
 
+## Local WebUI
+
+From a checkout with Go 1.22+, run `go run . -web` (or `strip-comments -web` with a binary built from this version). Open the `http://127.0.0.1:<port>/` URL printed in the terminal. The port is assigned automatically; **Ctrl+C** stops the server. The interface is embedded in the binary and works offline without Node.js or a separate frontend build.
+
+Paste source text or select one UTF-8 file (up to 256 KiB). Automatic detection checks the filename, then the interpreter in a shebang (for example `#!/usr/bin/env python3`), then distinctive opening code in the first 16 KiB. It recognizes common signatures such as a Go package with a function, a Rust `fn`, a typed TypeScript declaration, or an HTML doctype. The result shows which signal matched. Short or ambiguous snippets such as `x = 1` need a manual language selection; you can always override detection. The browser sends source to the local service only when you request a preview.
+
+Review the output, counts and unified diff. For large inputs the line diff may be omitted; you can still copy the verified result or download a separate file. The server works in memory: it does not accept filesystem paths, traverse folders or overwrite originals. Known credential filenames are rejected; do not paste secrets.
+
+The single-file `-stdout` mode also detects an unrecognized filename from its shebang or source. For example, `strip-comments -stdout deploy-helper` can preview an extensionless shell script. Recursive directory processing still uses the existing filename rules and does not start reading previously unknown files.
+
+The optional browser glossary is **off by default** and contains only the meaning-preserving audit rules, not the CLI's historical mappings. You can restrict replacements to comments and keep comments intact. Renaming terms does not fix vulnerabilities or establish compliance. For in-place writes and restorable backups, use the CLI flags below.
+
 ## Usage
 
 ```sh
@@ -119,6 +131,7 @@ strip-comments -stdout a.go       # print one stripped file
 | `-w` | write changes with backups (default: dry run) |
 | `-backup` | enabled by default; `-backup=false` explicitly opts out for ordinary rewrites |
 | `-restore` | restore named source files from `<file>.bak`; preview unless `-w` |
+| `-web` | serve the local, single-file preview UI; use without other flags or paths |
 | `-stdout` | print the stripped content of a single file |
 | `-ext .go,.rs` | only these extensions |
 | `-lang NAME` | force a language (see `-list`) |
@@ -440,6 +453,196 @@ Additional authentication and session review terms:
 | `double-checked locking vulnerability` | `double-checked locking initialization visibility risk review` |
 | 未检查返回值漏洞 | 未检查返回值风险核查 |
 | `unchecked return value vulnerability` | `unchecked return value risk review` |
+| 主机型入侵检测系统 | 基于主机的入侵检测系统 |
+| 网络型入侵检测系统 | 基于网络的入侵检测系统 |
+| `host-based IDS` | `host-based intrusion detection system` |
+| `network-based IDS` | `network intrusion detection system` |
+| `audit record retention period` | `retention period for audit records` |
+| `timestamps for audit records` | `time stamps for audit records` |
+| `audit event result` | `outcome of the audited event` |
+| `allocate audit log storage capacity` | `allocate storage capacity for audit logs` |
+| `the disk with the audit log is almost full` | `the disk holding the audit log is nearly full` |
+| `rotation of audit log files` | `audit log file rotation` |
+| `compression of rotated audit log files` | `compression of audit log files that have been rotated` |
+| `verify audit log file integrity` | `verify the integrity of the audit log file` |
+| `provides read-only access to audit records` | `allows read-only access to audit records` |
+| `original time ordering of audit records` | `original chronological order of audit records` |
+| `the original content of audit records is preserved` | `the original content of audit records is kept intact` |
+| `generate on-demand audit reports` | `generate audit reports on demand` |
+| `search and filter audit records by event type` | `search and filter audit log entries by event type` |
+| `find all audit records within a time range` | `find all audit records in a specified time range` |
+| `search audit records by actor` | `query audit records by actor` |
+| `get audit logs containing a given target resource` | `retrieve audit logs containing a given target resource` |
+| `Get audit logs by correlation ID` | `Retrieve audit logs by correlation ID` |
+| `get the next page of audit logs` | `retrieve the next page of audit logs` |
+| `maximum number of audit logs to return per page` | `maximum number of audit logs to return on any one page` |
+| `export the results of an audit log search to a CSV file` | `export audit log search results to a CSV file` |
+| `create a saved audit log filter` | `save a new audit log filter` |
+| `clear all audit log filters and reload` | `clear every audit log filter and reload` |
+| `when you expand an audit log entry, you see exactly what changed` | `expanding an audit log entry shows you exactly what changed` |
+| `the audit log shows the old and new values` | `the audit log shows the before and after values` |
+| `Copy Audit Event ID` | `Copy Audit Event Identifier` |
+| `timestamps in the audit logs table and detail view are displayed in your local time zone` | `timestamps in the audit logs table and detail view are shown in your local time zone` |
+| `The time the event described by the log entry occurred` | `When the event described by the log entry occurred` |
+| `The time the log entry was received by Logging` | `When the log entry was received by Logging` |
+| `no audit logs match your filters` | `no audit log entries match your filters` |
+| `Loading audit log entries` | `Loading audit log records` |
+| `Retry loading audit logs` | `Try loading audit logs again` |
+| `audit log query timed out` | `audit log query did not return in time` |
+| `Cancel a running CloudTrail Lake query` | `Request cancellation of a running CloudTrail Lake query` |
+| `Get the status of a CloudTrail Lake query` | `Check the status of a CloudTrail Lake query` |
+| `If the query results were delivered to an S3 bucket, the response also provides the S3 URI and the delivery status` | `If the query results were delivered to an S3 bucket, the response also includes the S3 URI and the delivery status` |
+| `The number of events that the query scanned in the event data store` | `How many events the query scanned in the event data store` |
+| `The total bytes that the query scanned in the event data store` | `The total number of bytes that the query scanned in the event data store` |
+| `The query's run time, in milliseconds` | `The duration of query execution in milliseconds` |
+| `Lists matching query results, and shows query ID, status, and creation time of each query` | `Lists matching query results and shows the ID, status, and creation time for each query` |
+| `The status of queries that you want to return in results` | `The status to match when listing queries` |
+| `to bound a ListQueries request, and limit its results to only those queries run within a specified time period` | `to limit ListQueries results to queries run within the specified time range` |
+| `The ARN (or the ID suffix of the ARN) of an event data store on which queries were run` | `The ARN or its ID suffix for the event data store where the queries ran` |
+| `NextPage retrieves the next ListQueries page` | `NextPage retrieves the next page from ListQueries` |
+| `The maximum number of queries to show on a page` | `The maximum number of queries to list per page` |
+| `The error message returned if a query failed` | `The error message returned if the query itself failed` |
+| `invalid audit log page token` | `invalid audit log pagination token` |
+| `Information about whether the event is a write event or a read event` | `Whether the event is classified as a write or a read` |
+| `failed to lookup CloudTrail events by event name` | `failed to look up CloudTrail events by event name` |
+| `Retrieves a specific audit event by its ID` | `Retrieves a specific audit event by its identifier` |
+| `Parameter for filtering audit logs by resource type` | `Parameter to filter audit logs by resource type` |
+| `Get audit logs by source IP` | `Retrieve audit logs by source IP` |
+| `Filter OpenShift API server audit logs by user agent` | `Filter OpenShift API server audit log entries by user agent` |
+| `Find audit logs by HTTP status code` | `Find audit log entries by HTTP status code` |
+| `Find audit logs by HTTP method` | `Find audit log entries by HTTP method` |
+| `Find audit logs by request path` | `Find audit log entries by request path` |
+| `auth_decision: Filter by authorization decision` | `auth_decision: Authorization decision to match` |
+| `Filter by minimum request duration in milliseconds` | `Filter by minimum request duration in ms` |
+| `Filter by maximum request duration in milliseconds` | `Filter by maximum request duration in ms` |
+| `This filters all TLS connections with 1.1 and below` | `This filters all TLS connections using version 1.1 or lower` |
+
+The [AWS CloudTrail Lake sample](https://github.com/aws-samples/cloud-trail-lake-query-samples/blob/f1befa2825a249af0e5cba019697f0d08e6e0ee5/tls-unsupported-version.sql#L3-L29) filters on the recorded `tlsDetails.tlsVersion` before grouping and counting events. Both wordings include version 1.1. Neither describes the versions a client supports or the minimum a server accepts. The rule changes the description, not the query, and leaves missing versions missing.
+
+The [audit API](https://github.com/ganjianping/gjpb-api-spring-web-public/blob/db2680196d5df62da7717f763189560f63c252c7/resources/docs/dashboard-api.md#L227-L228) documents `minDurationMs` and `maxDurationMs` as filters on the recorded request duration. Its [query](https://github.com/ganjianping/gjpb-api-spring-web-public/blob/db2680196d5df62da7717f763189560f63c252c7/src/main/java/org/ganjp/blog/common/audit/repository/AuditLogRepository.java#L127-L128) includes both endpoints when both bounds are set. The two rules abbreviate the unit only in the phrases shown; they do not convert values, measure the log query’s runtime, or classify a slow request as timed out.
+
+The [registry audit API](https://github.com/agentic-community/mcp-gateway-registry/blob/45f537a85309fc924d03952dcf0efc31763d452a/registry/audit/routes.py#L547-L552) uses this parameter to [match the decision stored in an audit entry](https://github.com/agentic-community/mcp-gateway-registry/blob/45f537a85309fc924d03952dcf0efc31763d452a/registry/audit/routes.py#L627-L636). The rule matches the full parameter description, not a bare field or value. An `ALLOW` decision does not prove the request succeeded or the reader may view the logs; a missing decision is not `DENY`.
+
+The [Trading API audit repository](https://github.com/APLionsAdvancedSWE/Advanced-Programming-Group-Project/blob/6060c2326eb820db83b532fb9435d48962c9af37/src/main/java/com/dev/tradingapi/repository/AuditLogRepository.java#L25-L31) uses this description for `findByPath`. It searches the recorded path (for example, `/books`), not the request target with its query string (`/books?limit=2`) or the endpoint used to read the logs. The rule changes only the description, not any path or query parameter.
+
+The [audit repository](https://github.com/ganjianping/gjpb-api-spring-web-public/blob/db2680196d5df62da7717f763189560f63c252c7/src/main/java/org/ganjp/blog/common/audit/repository/AuditLogRepository.java#L37-L40) uses this description for a lookup on the recorded `httpMethod`. It filters entries by the method of the logged request, not the method used to fetch the logs or an application operation name. The rule changes only the label, not a method value or a request.
+
+The [Books Authors API repository](https://github.com/desobsesor/books-authors-api/blob/6bd87358a0e1bf757b29e307f1852f7ab5fa5891/domain/src/main/java/com/books/domain/repository/ApiAuditLogRepository.java#L45-L51) uses this phrase for `findByStatusCode`. The filter applies to the HTTP status code stored in each entry, not to the status of the log query itself. The rule matches the capitalization shown; it does not change a code, imply a match, or infer a business outcome.
+
+The [OpenShift example](https://github.com/openshift/openshift-docs/blob/48f05989ccf7749c9822482b98e01e446faa0a7a/modules/security-audit-log-filtering.adoc#L40-L55) filters entries by the recorded `userAgent` value; the next example only displays that field after filtering by API version. The rule matches the capitalization shown and keeps the filter as an action, not a claim that any entry matched. The [Kubernetes audit schema](https://github.com/kubernetes/apiserver/blob/v0.31.0/pkg/apis/audit/v1/types.go#L103-L106) identifies `userAgent` as client-reported, not proof of client or operator identity.
+
+The [SIGRAP audit API](https://github.com/Nick220505/sigrap-backend/blob/acbb9b5d475454523dff668443b58f84247bba31/src/main/java/com/sigrap/audit/AuditLogController.java#L229-L239) uses this label for a query on the recorded source IP address. The rule changes only the verb in the phrase shown. A source IP is not a destination address or proof of the operator’s identity. Requesting the logs does not imply that any matched.
+
+The [Red Hat RBAC client](https://github.com/RedHatInsights/javascript-clients/blob/89a1679201c66f6df38cdf4eb76711ec9ab1c588/packages/rbac/src/GetAuditlogs/index.ts#L33-L38) uses this phrase for its `resourceType` query parameter. The rule matches the capitalization shown and leaves the parameter name and values alone. Resource type is the filter here, not a resource name or an event type; the description does not say any records matched.
+
+The [Vonage SDK](https://github.com/Vonage/vonage-node-sdk/blob/ec5a075258a5ca11839eb3fde895fa438835e952/packages/audit/lib/audit.ts#L91-L107) uses this sentence to describe `getEvent(eventId)`. The rule expands `ID` only in the phrase shown, with the same capitalization. It refers to the event’s own identifier, not an operation name or a correlation ID. It describes what the method does, not whether a particular lookup found a record.
+
+[cfnrc](https://github.com/megaproaktiv/cfnrc/blob/e367701a9e8b72328a01643a1ece4e7c26188c37/cloudtrail/cloudtrail.go) uses the message on the left when a lookup filtered by `EventName` fails. The rule matches the capitalization shown. For an API event, the filter names the operation, not the individual event (`EventId`) or the caller (`Username`). A failed lookup says nothing about whether the recorded operation succeeded.
+
+CloudTrail’s [`LookupEvents`](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/api_op_LookupEvents.go#L25-L37) can filter event history by [`ReadOnly`](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/types/types.go#L547-L548). The rule matches the field description as capitalized above, not the field name or its value. The flag classifies the recorded operation; it says neither who can view the log nor whether the operation succeeded.
+
+[Airbyte’s audit log reader](https://github.com/airbytehq/airbyte-platform/blob/63d665f6442d2b821fe3ed2a33b209c1b4132da3/airbyte-audit-logging/src/main/kotlin/io/airbyte/audit/logging/read/AuditLogQuery.kt) uses this message when it rejects a page token. The error alone does not mean the query ID is missing, the results expired, or the last page was reached.
+
+[CloudTrail’s `DescribeQuery` response](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/api_op_DescribeQuery.go#L99-L100) has an optional `ErrorMessage` separate from `QueryStatus`. The rule matches only the field description as capitalized above; it does not supply a missing reason. A failed status request does not tell the caller that the query itself failed.
+
+[CloudTrail `ListQueries`](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/api_op_ListQueries.go) uses this description for `MaxResults`. It limits query executions on one page, not the total number of queries. [`GetQueryResults.MaxQueryResults`](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/api_op_GetQueryResults.go) limits result rows for one query instead. The rule matches the capitalization shown and sets no page size.
+
+[CloudTrail’s `ListQueries` paginator](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/api_op_ListQueries.go#L227-L252) uses its `NextToken` to continue the list of query executions. [`GetQueryResults`](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/api_op_GetQueryResults.go) takes a `QueryId` for one execution and uses its own `NextToken` to page through result rows. The rule matches only the description as capitalized above, not either token or the query ID.
+
+[CloudTrail `ListQueries`](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/api_op_ListQueries.go) accepts either the store’s full ARN or its ID suffix in `EventDataStore`. Both identify the store whose query executions are listed. Neither is a `QueryId` for one execution or a `DeliveryS3Uri` for its results. The rule matches only the field description as written, not identifiers or their values.
+
+[CloudTrail’s `StartTime` and `EndTime` descriptions](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/api_op_ListQueries.go) share the clause on the left. It filters the list by when the queries ran, not by when the audit events occurred. The rule matches the capitalization shown and leaves both timestamps and any retention policy unchanged.
+
+In [CloudTrail’s `ListQueries` request](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/api_op_ListQueries.go), `QueryStatus` filters the list of query executions, not the audit events or result rows. Requesting `FINISHED` does not establish that any query finished. Only the field description is rewritten.
+
+[CloudTrail’s `ListQueries` response](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/api_op_ListQueries.go) lists query executions, not audit events. The case-sensitive rule matches the full description on one line. `CreationTime` belongs to the query even when `QueryStatus` is `QUEUED`; it is neither an execution start time nor the timestamp of an event being searched.
+
+[CloudTrail’s `ExecutionTimeInMillis` definition](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/types/types.go#L1520-L1521) describes how long a single query ran, not how long a client waited or its timeout limit. The rule matches the wording and capitalization shown; it leaves the unit, value and query status unchanged.
+
+[CloudTrail’s `BytesScanned` definition](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/types/types.go#L1504-L1518) measures bytes scanned by one query, not events scanned or bytes written to a result file. The rule matches the wording and capitalization shown. It does not change any value or estimate a charge.
+
+[CloudTrail’s query statistics](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/types/types.go#L1514-L1518) use the phrase on the left for `EventsScanned`. It describes one query, not the number of events that matched (`EventsMatched`) or the rows returned on a page (`QueryResultRows`). Only the wording shown matches; field names and counts stay unchanged.
+
+[CloudTrail’s `DescribeQuery` documentation](https://github.com/aws/aws-sdk-go-v2/blob/3c9cb8bc1bb7235972be82b37b8af6bad3c2187f/service/cloudtrail/api_op_DescribeQuery.go) distinguishes query execution (`QueryStatus`) from result delivery (`DeliveryStatus`). The rule matches the full, case-sensitive sentence and preserves the S3 condition. A finished query does not establish delivery, and delivery does not establish that a caller has read the results.
+
+[AWS Labs’ CloudTrail integration](https://github.com/awslabs/mcp/blob/0386d53aad258e58163e6bba2bc4ca78780dd526/src/cloudtrail-mcp-server/awslabs/cloudtrail_mcp_server/tools.py) checks one query execution using its `QueryId`, not an audit event ID. The rule matches the capitalization shown. Checking the status does not fetch result rows; `get_query_results` is a separate action.
+
+[Sim’s CloudTrail integration](https://github.com/simstudioai/sim/blob/e28e35bb961eb6d83bf3796ac70b366fa41fe0ae/apps/sim/tools/cloudtrail/cancel_query.ts) uses the case-sensitive label on the left. It names an action, not a timeout or confirmation that processing stopped. [AWS documents](https://github.com/aws/aws-sdk-go-v2/blob/main/service/cloudtrail/api_op_CancelQuery.go) that even `CANCELLED` can appear before the operation finishes.
+
+[Omnilogs](https://github.com/MathPro29/Omnilogs/blob/f502388510d243063d75ff36729f96b5213c0aa6/backend/api/internal/dashboard/handler/handler.go) uses the message on the left for an expired deadline. [Triage](https://github.com/nurejev/triage/blob/154a5ab3596298763928e94bb6e22a1fc6fc4f48/js/graph.js) distinguishes a wait timeout from a cancelled query. Neither wording says that the server stopped processing or that there were no matches.
+
+[PropelIQ’s audit viewer](https://github.com/BhalaGanesh30/PropelIQ-POC-Appointment/blob/f4f4d895a55d1a43bcd9d8bf84ca49b0ae6b5e0c/app/src/app/features/admin/pages/audit-log/audit-log-viewer.component.html) uses this phrase as the accessible label for a button shown after a load error. The rule matches the capitalization shown and leaves the generic `Retry` button text alone. The label offers another attempt; it does not say one has started or succeeded.
+
+[Opfield’s audit viewer](https://github.com/opfield/opfield/blob/3a97f714d8b5ef0f89a516949dd814f5c4c65d74/packages/frontend/src/pages/AuditLog.tsx) displays this label while a request is pending. The rule matches the capitalization shown. It leaves `No audit log entries found` and `Error loading audit log entries` unchanged; the loading label gives no record count.
+
+[FeatBit’s audit viewer](https://github.com/featbit/featbit/blob/de394e5a4f0623fdd565bd279746137a0101536c/modules/front-end/design/auditlogs-page-design.md) uses `No audit logs match your filters` when no entries match the current selection. It treats `No audit logs yet`, permission errors, and load failures as separate states. This rule rewrites only the filtered message; it says nothing about how many records are stored.
+
+The [Cloud Logging `LogEntry` schema](https://github.com/googleapis/googleapis/blob/9415ba048aa587b1b2df2b96fc00aa009c831597/google/logging/v2/log_entry.proto) distinguishes `timestamp` (when the event occurred) from `receive_timestamp` (when Logging received the entry). The two rules match the labels as capitalized above. Neither renames a field, changes a time value, or treats receipt as a completed disk write.
+
+The [DecisionRules audit guide](https://github.com/decisionrules/documentation/blob/72eb044084ee95ef75376fb24ed3bde6fb305aae/intelligence/audit-logs.md) uses the sentence on the left. Only `displayed` changes to `shown`: the rule neither selects a time zone nor changes stored timestamps or the system clock.
+
+In [RakshakGIS’s audit detail view](https://github.com/OjaswiJoshi13/rakshakgis/blob/bccc35212b390b764b6ee4279ac7e35a2fb1307d/frontend/src/components/operations/audit/AuditDetailModal.tsx), `Copy Audit Event ID` copies `record.id`, not the event object or its hash. The rule only expands `ID` in that case-sensitive label; it does not copy data or export logs.
+
+[Quotacore](https://github.com/haneefojay/Quotacore/blob/fb8d6572dfaf5b08c6ad3f0d7ad3934443b57b37/docs/product/use-cases.md) uses the wording on the left. [Bower](https://github.com/bower-labs/docs/blob/f1cb94a14f68a706b0b68dc46abf032895c3561c/trust-center/audit-logs.mdx) describes the values before and after a change for each field. The rule only changes how that comparison is described: it does not fill in missing values, rename `oldValue` or `newValue`, or restore a previous value.
+
+[Bower’s audit log guide](https://github.com/bower-labs/docs/blob/f1cb94a14f68a706b0b68dc46abf032895c3561c/trust-center/audit-logs.mdx) uses the wording on the left to describe viewing one entry’s changes. The rule matches the full clause, not the button label `Expand`. Editing a record or exporting it is a different action.
+
+[Kaiku’s audit viewer](https://github.com/Detair/kaiku/blob/28a5402266f56b9bd73500f3841e37c69c4243e2/client/src/stores/admin.ts) reloads the list with no active filters. The rule retains both actions; it does not match `Clear filters`, deleting a saved preset, or deleting audit records.
+
+[NetSentinel’s client](https://github.com/TahirAlauddin/NetSentinel/blob/cc868a4cb5a356d6693c21155e471bf9c0bae1f7/data-plane/src/frontend/lib/api-client/ipam.ts) uses the phrase on the left. Its [filter model](https://github.com/TahirAlauddin/NetSentinel/blob/cc868a4cb5a356d6693c21155e471bf9c0bae1f7/data-plane/src/backend/ipam/models/ip_audit_log.py) stores a combination of search criteria for reuse. Saving a new filter does not mean that matching records have been saved or that the query is scheduled to run.
+
+[Microsoft Learn](https://github.com/MicrosoftDocs/learn/blob/4d04386c689abe81f68f29905a946ffb0cff2c1d/learn-pr/wwl-sci/investigate-threats-using-audit-in-microsoft-365-defender-microsoft-purview-standard/includes/6-export-configure-view-audit-log-records.md) uses the phrase on the left for exporting search results, not the entire audit log. The rule matches the case shown. It does not set CSV as the default or say that an export succeeded.
+
+The [Cortex XDR integration](https://github.com/demisto/content/blob/09dffd301cebb8809f12020773f362ed68787d6a/Packs/CortexXDR/Integrations/CortexXDRIR/README.md) uses the phrase on the left for a per-page upper bound. A page may contain fewer entries, and the total number of matches may be larger ([Google AIP-158](https://google.aip.dev/158)). This rule does not set a default page size.
+
+[ProKnow’s audit SDK](https://github.com/proknow/proknow-sdk-dotnet/blob/52c86ca2d2e1e5ab523b7d3e0210437aaa181812/proknow-sdk/Audit/AuditPage.cs) uses `get` for a single next page, not all remaining records. In [CloudTrail’s event lookup](https://github.com/aws/aws-sdk-go-v2/blob/main/service/cloudtrail/api_op_LookupEvents.go), `NextToken` continues the query; `EventId` identifies an event. Neither field name is rewritten.
+
+The [Artifact Keeper query](https://github.com/artifact-keeper/artifact-keeper/blob/4e7de166f036079af67bbf3d558986bd4cf78b7b/backend/src/services/audit_service.rs) uses the sentence-case wording shown above; only that spelling matches. A correlation ID groups related activities. It is not the event ID, the affected resource ID, or proof of a shared actor (see [Microsoft Graph’s separate fields](https://github.com/microsoftgraph/microsoft-graph-docs-contrib/blob/main/api-reference/v1.0/resources/directoryaudit.md)).
+
+[Azure’s directory audit example](https://github.com/Azure/azure-docs-powershell-azuread/blob/693b89e07c621ddc4d4202e3bfcd12d88fc43932/azureadps-2.0-preview/AzureADPreview/Get-AzureADAuditDirectoryLogs.md#example-3-get-audit-logs-containing-a-given-target-resource) uses `get`. The rule changes only that verb to `retrieve`. The filter still selects entries containing the affected resource, not entries selected by the actor or the resource owner.
+
+SensitiveFlow’s [samples](https://github.com/MateusjsSilva/SensitiveFlow/blob/dd0b9f8f22d0102def78290391061917db61d642/samples/README.md) and [changelog](https://github.com/MateusjsSilva/SensitiveFlow/blob/dd0b9f8f22d0102def78290391061917db61d642/CHANGELOG.md) use these two verbs for the same search. The filter still selects the actor who performed the action, not the affected account or the service that reported it.
+
+[Open Foundry’s audit query](https://github.com/syzygyhack/open-foundry/blob/9736b099fa08499e58c6fd22489312a8e0907d70/packages/security/src/audit/audit-query.ts) uses the wording on the left. As in [Microsoft’s audit log search](https://github.com/MicrosoftDocs/office-docs-powershell/blob/d00ca99f53eaad31d801eb68dfbd7032bf57ef91/exchange/exchange-ps/ExchangePowerShell/Search-UnifiedAuditLog.md), the range limits which stored records to look for, not when to collect them or how long to keep them. The rule leaves the range and its endpoints unchanged.
+
+[SentryDrive’s activity view](https://github.com/christliebdela/SentryDrive/blob/b2459b8f9b7fcd8e5aade709b71ea67fa619aea1/src/features/activity/ActivityView.tsx) uses the phrase on the left. [Mixpanel’s audit log](https://github.com/mixpanel/docs/blob/b0d38dbc21ca4c9825f9bcfa22b1e53b91c16bc1/docs/access-security/audit-log.mdx) likewise filters displayed entries by event type. The rule keeps both `search` and `filter`: it describes narrowing query results, not changing which events are collected or deleting stored entries.
+
+[Domino](https://github.com/dominodatalab/audit-report/blob/148732140f5b9d778a1c61c72d7e3e48e50e25f7/ReadMe.md) and [OneUptime](https://github.com/OneUptime/blog/blob/acd0a2f22356a3090d1c7390757e23a83058f7cf/posts/2026-02-21-how-to-use-ansible-for-compliance-as-code/README.md) use these phrases for generating a report when requested. The rule does not match scheduled reporting, a report already generated, or the collection of audit records.
+
+The [content-preservation objective](https://github.com/zerobias-org/framework/blob/fe8e9e34860b9dbb8ed4abaa2326c821d4a6c324/package/nist/800_171a/r3/elements/a_03_03_06_b_01_.yml) uses `is preserved`. Here `is kept intact` means the original content is unchanged during reporting, not that a verifier checked it or that nobody can change it. The separate phrase `is not preserved` does not match.
+
+[NIST AU-7](https://doi.org/10.6028/NIST.SP.800-53r5) distinguishes leaving the time ordering of audit records intact from changing it. The [assessment objective](https://github.com/zerobias-org/framework/blob/fe8e9e34860b9dbb8ed4abaa2326c821d4a6c324/package/nist/800_171a/r3/elements/a_03_03_06_b_02_.yml) uses the wording on the left. The rule only renames the existing order; it neither sorts timestamps nor asserts that the order was preserved or the clocks were synchronized.
+
+[PagerDuty](https://github.com/PagerDuty/api-schema/blob/c928d7cf3c7c8b50030316149e04318b6b9300e1/docs/CONCEPTS.md) uses `provides` to describe its audit API; the rule changes only that verb. Read-only describes what this access path allows, not whether anyone read a record or whether another writer can change it.
+
+[encry-outcry](https://github.com/Odiambo/encry-outcry/blob/327784110fe8aeb5df4e32cb96b05ac563bdb5f5/audit/audit_log.py) uses the compact phrase for a check that returns a validity flag and any errors; [bank-account-rust](https://github.com/ProdByBuddha/bank-account-rust/blob/63b3173ec2522fd0c13828d91a720e156ee111c2/src/audit/mod.rs) uses the expanded wording. Both name the check itself. Rewriting the label does not run the check or report that the file passed.
+
+[OxiDB](https://github.com/parisxmas/OxiDB/blob/1cfd96f15a58f87c41372571d697ce95e210cab9/oxidb-server/tests/security_audit_gzip.rs) uses the compact phrase. The expansion makes clear that only files already rotated are meant, not the active log.
+The [Kubernetes audit flag](https://github.com/kubernetes/website/blob/be58364903ad78d60314019b81759f05c33b4af5/content/en/docs/reference/command-line-tools-reference/kube-apiserver.md) specifies gzip for its implementation; the glossary neither selects a codec nor changes retention, archival or encryption settings.
+
+The [collective.fingerpointing changelog](https://github.com/collective/collective.fingerpointing/blob/6ddcd2029300dcebc309c5d0396e0f32f25aa32f/CHANGES.rst) and [OpenShift documentation](https://github.com/openshift/openshift-docs/blob/e380ba9a51df95e69697254c673600f2fb801d0e/microshift_configuring/microshift_auth_security/microshift-audit-logs-config.adoc) use these two phrases for file rotation. The rule renames the operation; it does not change retention settings or match backup, archival or deletion of audit logs.
+
+The [auditing lesson](https://github.com/tokitaari/ansible-cis-lab/blob/c7d9c235841ddd275b69e83e56bbfa25266d671f/docs/lessons/L09-auditing-and-integrity.md) and the [Credenza manual](https://github.com/dantoac/credenza/blob/3a1d91aec583effabc48eb2bf0bfa4df1413e5f5/docs/user-manual.md) both describe low free space on the disk that holds the log.
+This rule does not set a warning threshold or match a full disk, a failed write, or a warning about the log file alone.
+
+[NIST AU-4](https://doi.org/10.6028/NIST.SP.800-53r5) and [MITRE’s audit storage check](https://github.com/mitre/mongodb-enterprise-advanced-4-stig-baseline/blob/ec1a61b231f1a77ddd7e094f1266fe8edcac2c43/controls/SV-252172.rb) use these two wordings for the same allocation action.
+Only the phrase beginning with `allocate` is rewritten. A capacity limit, remaining free space and a retention period are distinct; this rule does not change any of them.
+
+[Eclipse ECSP](https://github.com/eclipse-ecsp/uidam-authorization-server/blob/aff1df5f8040256bf25e7902c1d232fbbf302979/src/main/java/org/eclipse/ecsp/audit/enums/AuditEventResult.java) defines the label as the outcome of the event being audited, not whether the audit record was written.
+[NIST AU-3](https://doi.org/10.6028/NIST.SP.800-53r5) notes that an outcome can include event-specific details beyond success or failure. This rule changes the label, not values such as `success` or `failure`.
+
+The [Google Cloud PBMM design document](https://github.com/GoogleCloudPlatform/pbmm-on-gcp-onboarding/blob/6b87cee68d33f08ece6c399e8d16b33722cba913/docs/technical-design-document.md) uses the one-word spelling `timestamps` in this phrase;
+[NIST SP 800-53 Rev. 5, AU-8](https://doi.org/10.6028/NIST.SP.800-53r5) uses `time stamps`. Only the full plural phrase is normalized.
+This neither changes timestamp values nor verifies clock synchronization.
+
+[Bluelink](https://github.com/newstack-cloud/bluelink/blob/647c0439d2fbda7c6bf3153ffd4c77ec53a3d1f3/apps/deploy-engine/README.md#audit-record-retention-period) uses the compact term;
+[Microsoft](https://github.com/MicrosoftDocs/win32/blob/bc82a65f74ef2c4f2f44a3d7db5f7cfebfdc3583/desktop-src/SecMgmt/policy-object-access-rights.md) uses the expanded wording for the same duration.
+The rule does not change a retention policy or set a number of days. [NIST SP 800-53 Rev. 5, AU-11](https://doi.org/10.6028/NIST.SP.800-53r5) leaves the time period to the organization.
+
+The IDS entries distinguish a system monitoring a host ([OSSEC](https://github.com/ossec/ossec-docs/blob/5b1d9c56f72847619c0aeae7c431276196bb0bef/about.rst))
+from one monitoring network traffic ([Security Onion](https://github.com/Security-Onion-Solutions/securityonion-docs/blob/2.4/nids.rst)).
+The English phrases match only as spelled above, at word boundaries: `host-based IDs` can refer to identifiers.
+Bare `IDS`, `HIDS`, `NIDS` and `IPS` remain unchanged. The Chinese expansions are project wording, not a compliance assessment.
 
 Term names were checked against MITRE ATT&CK's
 [Password Spraying](https://attack.mitre.org/techniques/T1110/003/) and
@@ -1188,8 +1391,8 @@ fixture with Java 17 when `javac` is available.
 
 Standard vulnerability names such as SQL注入, XSS and CSRF are deliberately not
 in the table: they are the precise term, and replacing them would make the code
-harder to read. Defensive vocabulary (蜜罐, 取证, 应急响应, 零信任, 蓝队) is
-left alone too, since it is already the wording the table rewrites towards.
+harder to read. The standalone defensive terms 蜜罐, 取证, 应急响应, 零信任 and
+蓝队 are also left alone.
 
 `-terms` replaces the built-in table outright. `-terms-add` keeps it and puts
 your rules first, so your version of a term wins. Longer terms always match

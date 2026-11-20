@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>注释清理预览 · strip-comments</title>
+  <link rel="stylesheet" href="app.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#workspace">跳到工作区</a>
+  <header class="mast"><div class="wrap mast-line">
+    <span class="brand"><span class="mark" aria-hidden="true">//</span>strip-comments</span>
+    <span class="edition"><span aria-hidden="true">●</span> 本机工具</span>
+  </div></header>
+  <main class="wrap">
+    <div class="intro">
+      <div><p class="eyebrow" lang="en">Source proof / 01</p><h1>注释清理<span>预览</span></h1></div>
+      <p class="privacy">只有点击<strong>生成预览</strong>，才会把当前代码、文件名和选项发送给本机服务。不会改写原文件。</p>
+    </div>
+    <noscript><p class="notice">此页面需要 JavaScript；当前不会发送任何代码。</p></noscript>
+    <form id="workspace" class="spread" autocomplete="off" tabindex="-1">
+      <section class="panel" aria-labelledby="source-heading">
+        <header class="panel-head"><span class="folio" aria-hidden="true">01</span><h2 id="source-heading">源代码</h2><span class="slug" lang="en">Source</span></header>
+        <div class="panel-body">
+          <div class="toolbar">
+            <input class="sr-only" id="file" type="file" aria-describedby="source-help">
+            <label class="button" for="file">选择文件</label>
+            <bdi id="filename" class="filename">粘贴输入</bdi>
+            <button class="quiet" id="clear" type="button" disabled>清空输入</button>
+          </div>
+          <label class="sr-only" for="source">待处理的源代码</label>
+          <textarea id="source" class="code" rows="9" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" translate="no" dir="ltr" aria-describedby="source-help input-size input-error" placeholder="在这里粘贴代码，或从本机选择一个文件。"></textarea>
+          <div class="editor-foot"><span>UTF-8 · 上限 256 KiB</span><span id="input-size">0 B</span></div>
+          <p id="source-help" class="hint">选择文件会替换当前输入。未编辑的文件原样提交：内容无变化时逐字节保留，包括 BOM 和混合换行；有变化时按原文件的主要换行格式输出。在框内编辑后，换行统一为 LF。</p>
+          <p id="input-error" class="error" role="status"></p>
+          <div class="language-field"><label for="language">源语言</label>
+            <select id="language" aria-describedby="language-help">
+              <option id="auto" value="auto" selected>自动识别</option>
+              <option value="go">Go</option>
+            </select>
+          </div>
+          <p id="language-help" class="hint">预览时先看文件名，再看首行解释器和代码特征。粘贴也可识别；如果只有注释或无法判断，请手动选择语言。</p>
+          <fieldset class="checks"><legend>清理时保留</legend>
+            <label><input type="checkbox" id="keepDoc">文档注释</label>
+            <label><input type="checkbox" id="keepBlank">因清理而变空的行</label>
+            <label><input type="checkbox" id="keepLicense">文件头注释</label>
+          </fieldset>
+          <div class="glossary">
+            <label class="toggle"><input id="replace" type="checkbox" aria-describedby="glossary-help">替换审计术语（可选）</label>
+            <p class="hint" id="glossary-help">默认关闭。只用精选词表替换同义的审计术语，可能改动代码中的词语，不会修复安全问题。</p>
+            <fieldset id="term-options" class="checks nested" disabled><legend class="sr-only">术语替换范围</legend>
+              <label><input id="commentsOnly" type="checkbox">只替换注释里的术语</label>
+              <label><input id="keepComments" type="checkbox">保留所有注释</label>
+            </fieldset>
+          </div>
+          <div class="run"><button class="primary" id="preview" type="submit" disabled>生成预览 <span aria-hidden="true">→</span></button><a id="jump" href="#result-heading" hidden>查看结果</a></div>
+          <p id="status" class="status" role="status" aria-atomic="true"></p>
+        </div>
+      </section>
+      <section class="panel proof" aria-labelledby="result-heading">
+        <header class="panel-head"><span class="folio" aria-hidden="true">02</span><h2 id="result-heading" tabindex="-1">处理结果</h2><span class="slug" lang="en">Proof</span></header>
+        <div class="panel-body">
+          <div class="toolbar"><span class="state" id="result-state">待预览</span><button class="button" type="button" id="copy" disabled>复制结果</button><button class="button" type="button" id="download" disabled>下载副本</button></div>
+          <div class="sheet">
+            <div id="empty" class="empty"><span class="pilcrow" aria-hidden="true">¶</span><p>输入代码并生成预览后，<br>在这里核对处理结果。</p></div>
+            <pre id="output" class="code" tabindex="0" role="region" aria-label="输出代码" dir="ltr" translate="no" hidden></pre>
+          </div>
+          <p class="summary" id="counts" hidden></p>
+          <details id="changes" hidden><summary>查看逐行差异 <span lang="en">Unified diff</span></summary><pre id="diff" class="code" tabindex="0" role="region" aria-label="逐行差异" dir="ltr" translate="no"></pre></details>
+          <p id="diff-note" class="hint" hidden></p>
+        </div>
+      </section>
+    </form>
+  </main>
+</body>
+</html>

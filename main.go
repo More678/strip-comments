@@ -23,6 +23,7 @@ import (
 	"github.com/More678/strip-comments/internal/udiff"
 	"github.com/More678/strip-comments/internal/verify"
 	"github.com/More678/strip-comments/internal/walk"
+	"github.com/More678/strip-comments/internal/webui"
 )
 
 // version is overridden at build time:
@@ -96,6 +97,7 @@ func run(args []string) int {
 		backup    = fs.Bool("backup", true, "keep <file>.bak before rewriting; -backup=false opts out")
 		restore   = fs.Bool("restore", false, "restore named source files from <file>.bak (preview unless -w)")
 		toStdout  = fs.Bool("stdout", false, "print one stripped file to stdout, write nothing")
+		web       = fs.Bool("web", false, "open a local preview server; prints its URL and never writes source files")
 		langName  = fs.String("lang", "", "force this language (see -list)")
 		extList   = fs.String("ext", "", "only these extensions, e.g. \".go,.rs\"")
 		exclude   = fs.String("exclude", "", "extra names or globs to skip, comma separated")
@@ -123,6 +125,17 @@ func run(args []string) int {
 	)
 	if err := fs.Parse(args); err != nil {
 		return exitUsage
+	}
+	if *web {
+		if fs.NArg() != 0 || fs.NFlag() != 1 {
+			fmt.Fprintln(os.Stderr, "-web takes no paths or other flags; select options in the browser")
+			return exitUsage
+		}
+		if err := webui.Serve(os.Stdout); err != nil {
+			fmt.Fprintf(os.Stderr, "WebUI: %v\n", err)
+			return exitError
+		}
+		return exitOK
 	}
 
 	if *restore {
@@ -512,7 +525,12 @@ func runStdout(path string, cfg config, opt scan.Options) int {
 	}
 	l := cfg.lang
 	if l == nil {
-		l = lang.ByFilename(filepath.Base(path))
+		var by string
+		l, by = lang.Detect(filepath.Base(path), raw)
+		if l != nil && by != "filename" && l.Risky && !cfg.risky {
+			fmt.Fprintf(os.Stderr, "%s: detected heuristic language %s; use -lang %s to confirm\n", path, l.Name, l.Name)
+			return exitError
+		}
 	}
 	if l == nil {
 		fmt.Fprintf(os.Stderr, "%s: unknown language, use -lang\n", path)
